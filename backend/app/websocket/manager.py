@@ -1,6 +1,7 @@
 import socketio
-
-sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=[])
+from app.config import settings
+origins = [o.strip() for o in settings.CORS_ORIGINS.split(",")]
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=origins)
 
 
 @sio.event
