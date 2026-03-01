@@ -16,8 +16,14 @@ export function getSocket(): Socket {
 
 export function joinWishlist(wishlistId: string) {
   const s = getSocket();
-  if (!s.connected) s.connect();
-  s.emit("join_wishlist", { wishlist_id: wishlistId });
+  if (!s.connected) {
+    s.connect();
+    s.once("connect", () => {
+      s.emit("join_wishlist", { wishlist_id: wishlistId });
+    });
+  } else {
+    s.emit("join_wishlist", { wishlist_id: wishlistId });
+  }
 }
 
 export function leaveWishlist(wishlistId: string) {
