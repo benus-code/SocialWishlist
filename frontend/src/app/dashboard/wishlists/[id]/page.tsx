@@ -67,7 +67,7 @@ export default function WishlistDetailPage({ params }: { params: Promise<{ id: s
       socket.off("item_updated", handler);
       leaveWishlist(wishlist.id);
     };
-  }, [wishlist]);
+  }, [wishlist?.id]);
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
