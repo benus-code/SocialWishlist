@@ -50,8 +50,9 @@ export default function WishlistDetailPage({ params }: { params: Promise<{ id: s
 
   // WebSocket real-time updates
   useEffect(() => {
-    if (!wishlist) return;
-    joinWishlist(wishlist.id);
+    if (!wishlist?.id) return;
+    const wishlistId = wishlist.id;
+    joinWishlist(wishlistId);
     const socket = getSocket();
     const handler = (data: ItemUpdateEvent) => {
       setItems((prev) =>
@@ -65,9 +66,9 @@ export default function WishlistDetailPage({ params }: { params: Promise<{ id: s
     socket.on("item_updated", handler);
     return () => {
       socket.off("item_updated", handler);
-      leaveWishlist(wishlist.id);
+      leaveWishlist(wishlistId);
     };
-  }, [wishlist]);
+  }, [wishlist?.id]);
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
