@@ -13,14 +13,14 @@ async def connect(sid, environ):
 async def join_wishlist(sid, data):
     wishlist_id = data.get("wishlist_id")
     if wishlist_id:
-        sio.enter_room(sid, f"wishlist_{wishlist_id}")
+        await sio.enter_room(sid, f"wishlist_{wishlist_id}")
 
 
 @sio.event
 async def leave_wishlist(sid, data):
     wishlist_id = data.get("wishlist_id")
     if wishlist_id:
-        sio.leave_room(sid, f"wishlist_{wishlist_id}")
+        await sio.leave_room(sid, f"wishlist_{wishlist_id}")
 
 
 @sio.event

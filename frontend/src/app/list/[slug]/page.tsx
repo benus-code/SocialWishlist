@@ -35,8 +35,9 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
 
   // WebSocket
   useEffect(() => {
-    if (!wishlist) return;
-    joinWishlist(wishlist.id);
+    if (!wishlist?.id) return;
+    const wishlistId = wishlist.id;
+    joinWishlist(wishlistId);
     const socket = getSocket();
     const handler = (data: ItemUpdateEvent) => {
       setItems((prev) =>
@@ -50,9 +51,9 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
     socket.on("item_updated", handler);
     return () => {
       socket.off("item_updated", handler);
-      leaveWishlist(wishlist.id);
+      leaveWishlist(wishlistId);
     };
-  }, [wishlist]);
+  }, [wishlist?.id]);
 
   if (loading) return <div className="flex justify-center py-20 text-gray-400">Loading...</div>;
 
