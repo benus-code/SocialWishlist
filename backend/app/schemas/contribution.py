@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class ContributionCreate(BaseModel):
-    amount: int = Field(ge=1)
+    amount: int = Field(ge=100)
 
 
 class ContributionUpdate(BaseModel):

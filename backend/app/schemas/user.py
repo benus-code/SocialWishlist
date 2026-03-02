@@ -14,10 +14,16 @@ class UserLogin(BaseModel):
     password: str
 
 
+class GoogleAuthRequest(BaseModel):
+    credential: str
+
+
 class UserResponse(BaseModel):
     id: uuid.UUID
     email: str
     display_name: str | None
+    avatar_url: str | None = None
+    oauth_provider: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

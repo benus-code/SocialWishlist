@@ -1,12 +1,24 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
 
 from app.config import settings
-from app.routers import auth, wishlists, items, contributions
+from app.database import engine, Base
+from app.models import user, wishlist, item, contribution  # noqa: F401 - register models
+from app.routers import auth, wishlists, items, contributions, scrape
 from app.websocket.manager import sio
 
-app = FastAPI(title="Social Wishlist API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+
+
+app = FastAPI(title="Social Wishlist API", version="1.0.0", lifespan=lifespan)
 
 # CORS
 origins = [o.strip() for o in settings.CORS_ORIGINS.split(",")]
@@ -23,6 +35,7 @@ app.include_router(auth.router)
 app.include_router(wishlists.router)
 app.include_router(items.router)
 app.include_router(contributions.router)
+app.include_router(scrape.router)
 
 # Socket.IO
 socket_app = socketio.ASGIApp(sio, other_asgi_app=app)

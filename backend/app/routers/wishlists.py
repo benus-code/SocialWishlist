@@ -69,6 +69,7 @@ async def create_wishlist(
     wishlist = Wishlist(
         user_id=user.id,
         title=data.title,
+        description=data.description,
         occasion=data.occasion,
         event_date=data.event_date,
         currency=data.currency,
@@ -151,9 +152,11 @@ async def get_public_wishlist(slug: str, db: AsyncSession = Depends(get_db)):
     return {
         "id": str(wishlist.id),
         "title": wishlist.title,
+        "description": wishlist.description,
         "occasion": wishlist.occasion,
         "event_date": str(wishlist.event_date) if wishlist.event_date else None,
         "slug": wishlist.slug,
         "currency": wishlist.currency,
+        "is_archived": wishlist.is_archived,
         "items": [item.model_dump() for item in items],
     }

@@ -34,6 +34,8 @@ export interface User {
   id: string;
   email: string;
   display_name: string | null;
+  avatar_url: string | null;
+  oauth_provider: string | null;
   created_at: string;
 }
 
@@ -54,6 +56,13 @@ export const authApi = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
+  googleAuth: (credential: string) =>
+    apiFetch<AuthResponse>("/api/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential }),
+    }),
+  googleClientId: () =>
+    apiFetch<{ client_id: string }>("/api/auth/google/client-id").catch(() => null),
   logout: () => apiFetch("/api/auth/logout", { method: "POST" }),
   me: (token: string) => apiFetch<User>("/api/auth/me", { token }),
 };
@@ -63,10 +72,12 @@ export interface Wishlist {
   id: string;
   user_id: string;
   title: string;
+  description: string | null;
   occasion: string | null;
   event_date: string | null;
   slug: string;
   currency: string;
+  is_archived: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -88,11 +99,20 @@ export interface WishlistItem {
 export interface PublicWishlist {
   id: string;
   title: string;
+  description: string | null;
   occasion: string | null;
   event_date: string | null;
   slug: string;
   currency: string;
+  is_archived: boolean;
   items: WishlistItem[];
+}
+
+export interface ScrapeResult {
+  title: string | null;
+  image: string | null;
+  price: number | null;
+  currency: string | null;
 }
 
 export interface Contribution {
@@ -124,6 +144,15 @@ export const itemApi = {
     apiFetch<WishlistItem>(`/api/wishlists/${wishlistId}/items/${itemId}`, { method: "PUT", body: JSON.stringify(data), token }),
   delete: (wishlistId: string, itemId: string, token: string) =>
     apiFetch(`/api/wishlists/${wishlistId}/items/${itemId}`, { method: "DELETE", token }),
+  getDeletionInfo: (wishlistId: string, itemId: string, token: string) =>
+    apiFetch<{ item_name: string; total_funded: number; contributor_count: number; has_contributions: boolean }>(
+      `/api/wishlists/${wishlistId}/items/${itemId}/deletion-info`, { token }
+    ),
+};
+
+export const scrapeApi = {
+  scrape: (url: string) =>
+    apiFetch<ScrapeResult>("/api/scrape/", { method: "POST", body: JSON.stringify({ url }) }),
 };
 
 export const contributionApi = {

@@ -11,11 +11,11 @@ export function getStatusBadge(status: string, totalFunded: number, price: numbe
 
   switch (status) {
     case "FULLY_FUNDED":
-      return { label: "Fully funded", color: "bg-green-100 text-green-800" };
+      return { label: "Funded", color: "bg-emerald-100 text-emerald-700" };
     case "PARTIALLY_FUNDED":
-      if (pct > 0.5) return { label: "Almost funded", color: "bg-yellow-100 text-yellow-800" };
-      return { label: "Funding in progress", color: "bg-blue-100 text-blue-800" };
+      if (pct > 0.7) return { label: `${Math.round(pct * 100)}%`, color: "bg-amber-100 text-amber-700" };
+      return { label: `${Math.round(pct * 100)}%`, color: "bg-violet-100 text-violet-700" };
     default:
-      return { label: "Available", color: "bg-gray-100 text-gray-800" };
+      return { label: "Available", color: "bg-gray-100 text-gray-600" };
   }
 }

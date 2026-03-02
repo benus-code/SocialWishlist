@@ -119,6 +119,34 @@ async def update_item(
     )
 
 
+@router.get("/{item_id}/deletion-info")
+async def get_item_deletion_info(
+    wishlist_id: str,
+    item_id: str,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get info about what will be affected by deleting this item."""
+    result = await db.execute(
+        select(Wishlist).where(Wishlist.id == wishlist_id, Wishlist.user_id == user.id)
+    )
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Wishlist not found")
+
+    result = await db.execute(select(Item).where(Item.id == item_id, Item.wishlist_id == wishlist_id))
+    item = result.scalar_one_or_none()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    total_funded, contributor_count = await get_item_funding(db, item.id)
+    return {
+        "item_name": item.name,
+        "total_funded": total_funded,
+        "contributor_count": contributor_count,
+        "has_contributions": total_funded > 0,
+    }
+
+
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_item(
     wishlist_id: str,

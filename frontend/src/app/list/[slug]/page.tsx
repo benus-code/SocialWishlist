@@ -6,6 +6,8 @@ import { wishlistApi, PublicWishlist, WishlistItem } from "@/lib/api";
 import { formatPrice } from "@/lib/utils";
 import ItemCard from "@/components/ItemCard";
 import ProgressBar from "@/components/ProgressBar";
+import EmptyState from "@/components/EmptyState";
+import { CardSkeleton } from "@/components/Skeleton";
 import { getSocket, joinWishlist, leaveWishlist, ItemUpdateEvent } from "@/lib/socket";
 import Link from "next/link";
 
@@ -23,17 +25,14 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
       setWishlist(data);
       setItems(data.items);
     } catch {
-      setError("This wishlist no longer exists.");
+      setError("This wishlist no longer exists or has been removed.");
     } finally {
       setLoading(false);
     }
   }, [slug]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  // WebSocket
   useEffect(() => {
     if (!wishlist) return;
     joinWishlist(wishlist.id);
@@ -48,20 +47,33 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
       );
     };
     socket.on("item_updated", handler);
-    return () => {
-      socket.off("item_updated", handler);
-      leaveWishlist(wishlist.id);
-    };
+    return () => { socket.off("item_updated", handler); leaveWishlist(wishlist.id); };
   }, [wishlist]);
 
-  if (loading) return <div className="flex justify-center py-20 text-gray-400">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="skeleton h-32 w-full rounded-2xl mb-6" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
-      <div className="max-w-md mx-auto px-4 py-20 text-center">
-        <p className="text-xl text-gray-400">{error}</p>
-        <Link href="/" className="text-indigo-500 hover:underline mt-4 block">
-          Go home
+      <div className="max-w-md mx-auto px-4 py-20 text-center animate-fade-in">
+        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">Wishlist not found</h2>
+        <p className="text-gray-500 mb-6">{error}</p>
+        <Link href="/" className="text-violet-600 hover:text-violet-700 font-medium text-sm">
+          Go to homepage
         </Link>
       </div>
     );
@@ -72,44 +84,68 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
   const isOwner = user?.id === (wishlist as PublicWishlist & { user_id?: string }).user_id;
   const totalFunded = items.reduce((s, i) => s + i.total_funded, 0);
   const totalPrice = items.reduce((s, i) => s + i.price, 0);
+  const pct = totalPrice > 0 ? Math.round((totalFunded / totalPrice) * 100) : 0;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{wishlist.title}</h1>
-        <p className="text-gray-400 text-sm mt-1">
-          {wishlist.occasion && `${wishlist.occasion} · `}
-          {wishlist.event_date || ""}
-        </p>
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shrink-0">
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{wishlist.title}</h1>
+            <p className="text-gray-400 text-sm">
+              {wishlist.occasion && `${wishlist.occasion}`}
+              {wishlist.occasion && wishlist.event_date && " · "}
+              {wishlist.event_date}
+            </p>
+          </div>
+        </div>
+
+        {wishlist.description && (
+          <p className="text-sm text-gray-500 mt-3">{wishlist.description}</p>
+        )}
 
         {items.length > 0 && (
-          <div className="mt-4">
-            <div className="flex justify-between text-sm text-gray-500 mb-1">
-              <span>Overall progress</span>
-              <span>
-                {formatPrice(totalFunded, wishlist.currency)} / {formatPrice(totalPrice, wishlist.currency)}
+          <div className="mt-5">
+            <div className="flex justify-between text-sm text-gray-500 mb-1.5">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                {pct}% funded
               </span>
+              <span className="font-medium">{formatPrice(totalFunded, wishlist.currency)} / {formatPrice(totalPrice, wishlist.currency)}</span>
             </div>
-            <ProgressBar funded={totalFunded} total={totalPrice} />
+            <ProgressBar funded={totalFunded} total={totalPrice} size="md" />
           </div>
         )}
 
         {!token && (
-          <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
-            <p className="text-sm text-indigo-700">
-              <Link href="/login" className="font-medium underline">
+          <div className="mt-5 p-3.5 bg-violet-50 rounded-xl border border-violet-100">
+            <p className="text-sm text-violet-700">
+              <Link href="/login" className="font-semibold underline decoration-violet-300 hover:decoration-violet-500 transition-colors">
                 Sign in
               </Link>{" "}
               to reserve items or contribute toward gifts.
             </p>
           </div>
         )}
+
+        {wishlist.is_archived && (
+          <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
+            <p className="text-sm text-amber-700 font-medium">This wishlist has been archived. New contributions are no longer accepted.</p>
+          </div>
+        )}
       </div>
 
       {items.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
-          <p className="text-gray-400 text-lg">This wishlist has no items yet.</p>
-        </div>
+        <EmptyState
+          icon="gift"
+          title="No items yet"
+          description="The wishlist owner hasn't added any items yet. Check back later!"
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {items.map((item) => (
@@ -125,9 +161,17 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
         </div>
       )}
 
-      <p className="text-xs text-gray-300 text-center mt-8">
-        Contributions are indicative. Coordinate payment privately.
-      </p>
+      <div className="text-center mt-8 space-y-1">
+        <p className="text-xs text-gray-300">
+          Contributions are indicative. Coordinate payment privately.
+        </p>
+        <p className="text-xs text-gray-300">
+          Powered by{" "}
+          <Link href="/" className="text-violet-400 hover:text-violet-500 transition-colors font-medium">
+            Wishly
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
