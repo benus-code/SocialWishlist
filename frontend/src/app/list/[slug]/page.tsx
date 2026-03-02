@@ -52,7 +52,7 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
       socket.off("item_updated", handler);
       leaveWishlist(wishlist.id);
     };
-  }, [wishlist]);
+  }, [wishlist?.id]);
 
   if (loading) return <div className="flex justify-center py-20 text-gray-400">Loading...</div>;
 
