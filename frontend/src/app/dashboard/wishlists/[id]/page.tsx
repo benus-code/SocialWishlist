@@ -67,7 +67,7 @@ export default function WishlistDetailPage({ params }: { params: Promise<{ id: s
     };
     socket.on("item_updated", handler);
     return () => { socket.off("item_updated", handler); leaveWishlist(wishlist.id); };
-  }, [wishlist]);
+  }, [wishlist?.id]);
 
   // URL Autofill
   const handleUrlPaste = async (url: string) => {

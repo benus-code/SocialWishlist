@@ -3,6 +3,7 @@ import { io, Socket } from "socket.io-client";
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:8000";
 
 let socket: Socket | null = null;
+const activeRooms = new Set<string>();
 
 export function getSocket(): Socket {
   if (!socket) {
@@ -10,23 +11,28 @@ export function getSocket(): Socket {
       transports: ["websocket", "polling"],
       autoConnect: false,
     });
+    // Rejoin all active rooms on every (re)connection
+    socket.on("connect", () => {
+      activeRooms.forEach((id) => {
+        socket!.emit("join_wishlist", { wishlist_id: id });
+      });
+    });
   }
   return socket;
 }
 
 export function joinWishlist(wishlistId: string) {
+  activeRooms.add(wishlistId);
   const s = getSocket();
   if (!s.connected) {
     s.connect();
-    s.once("connect", () => {
-      s.emit("join_wishlist", { wishlist_id: wishlistId });
-    });
   } else {
     s.emit("join_wishlist", { wishlist_id: wishlistId });
   }
 }
 
 export function leaveWishlist(wishlistId: string) {
+  activeRooms.delete(wishlistId);
   const s = getSocket();
   s.emit("leave_wishlist", { wishlist_id: wishlistId });
 }
