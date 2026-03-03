@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-# If alembic_version table doesn't exist, stamp the DB at revision 001
-# (meaning: the initial schema already exists, skip recreating it)
+# If alembic_version table doesn't exist, stamp the DB at head (002)
+# All tables were already created by create_all, so skip all migrations
 python -c "
 import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -17,9 +17,9 @@ async def stamp_if_needed():
         ))
         exists = result.scalar()
         if not exists:
-            print('First alembic run: stamping database at revision 001...')
+            print('First alembic run: stamping database at head (002)...')
             await conn.execute(text('CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL)'))
-            await conn.execute(text(\"INSERT INTO alembic_version VALUES ('001')\"))
+            await conn.execute(text(\"INSERT INTO alembic_version VALUES ('002')\"))
         else:
             print('alembic_version table already exists, skipping stamp.')
     await engine.dispose()
@@ -27,7 +27,7 @@ async def stamp_if_needed():
 asyncio.run(stamp_if_needed())
 "
 
-# Run any pending migrations (will apply 002+ only)
+# Run any pending migrations (future migrations only)
 alembic upgrade head
 
 # Start the server
