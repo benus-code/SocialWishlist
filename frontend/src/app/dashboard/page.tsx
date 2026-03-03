@@ -175,17 +175,22 @@ export default function DashboardPage() {
           {wishlists.map((wl) => (
             <div
               key={wl.id}
-              className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-all animate-slide-up group"
+              className={`bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-all animate-slide-up group ${wl.is_archived ? "opacity-60" : ""}`}
             >
               <Link href={`/dashboard/wishlists/${wl.id}`} className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center shrink-0">
-                    <svg className="w-5 h-5 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${wl.is_archived ? "bg-gray-100" : "bg-violet-100"}`}>
+                    <svg className={`w-5 h-5 ${wl.is_archived ? "text-gray-400" : "text-violet-600"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
                     </svg>
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-gray-900 truncate">{wl.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900 truncate">{wl.title}</h3>
+                      {wl.is_archived && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-500 shrink-0">Archived</span>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-400 truncate">
                       {wl.occasion && `${wl.occasion} · `}
                       {wl.event_date || "No date set"}

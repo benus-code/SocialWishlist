@@ -1,8 +1,11 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
+from alembic.config import Config
+from alembic import command
 
 from app.config import settings
 from app.database import engine, Base
@@ -10,11 +13,20 @@ from app.models import user, wishlist, item, contribution  # noqa: F401 - regist
 from app.routers import auth, wishlists, items, contributions, scrape
 from app.websocket.manager import sio
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Run Alembic migrations on startup, fallback to create_all
+    try:
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
+        logger.info("Alembic migrations applied successfully")
+    except Exception as e:
+        logger.warning("Alembic migration failed (%s), falling back to create_all", e)
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
     yield
 
 

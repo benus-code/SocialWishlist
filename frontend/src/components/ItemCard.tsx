@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { WishlistItem, contributionApi } from "@/lib/api";
+import { useState, useEffect } from "react";
+import { WishlistItem, Contribution, contributionApi } from "@/lib/api";
 import { formatPrice, getStatusBadge } from "@/lib/utils";
 import ProgressBar from "./ProgressBar";
 import Toast from "./Toast";
@@ -12,19 +12,28 @@ interface ItemCardProps {
   currency: string;
   token: string | null;
   isOwner: boolean;
+  isArchived?: boolean;
   onUpdate?: () => void;
 }
 
-export default function ItemCard({ item, currency, token, isOwner, onUpdate }: ItemCardProps) {
+export default function ItemCard({ item, currency, token, isOwner, isArchived, onUpdate }: ItemCardProps) {
   const [showContribute, setShowContribute] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [myContribution, setMyContribution] = useState<Contribution | null>(null);
 
   const badge = getStatusBadge(item.status, item.total_funded, item.price);
   const remaining = item.price - item.total_funded;
   const isFullyFunded = item.status === "FULLY_FUNDED";
   const pct = item.price > 0 ? Math.round((item.total_funded / item.price) * 100) : 0;
+
+  // Fetch user's existing contribution
+  useEffect(() => {
+    if (!token || isOwner) return;
+    contributionApi.mine(item.id, token).then(setMyContribution).catch(() => {});
+  }, [item.id, token, isOwner, item.total_funded]);
 
   const handleReserve = async () => {
     if (!token) return;
@@ -60,6 +69,45 @@ export default function ItemCard({ item, currency, token, isOwner, onUpdate }: I
       setLoading(false);
     }
   };
+
+  const handleUpdateContribution = async () => {
+    if (!token) return;
+    const cents = Math.round(parseFloat(amount) * 100);
+    if (isNaN(cents) || cents < 100) {
+      setToast({ message: "Minimum contribution is 1.00", type: "error" });
+      return;
+    }
+    setLoading(true);
+    try {
+      await contributionApi.update(item.id, cents, token);
+      setToast({ message: "Contribution updated!", type: "success" });
+      setShowEdit(false);
+      setAmount("");
+      onUpdate?.();
+    } catch (e: unknown) {
+      setToast({ message: e instanceof Error ? e.message : "Failed to update", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      await contributionApi.update(item.id, 0, token);
+      setToast({ message: "Contribution withdrawn", type: "success" });
+      setShowEdit(false);
+      onUpdate?.();
+    } catch (e: unknown) {
+      setToast({ message: e instanceof Error ? e.message : "Cannot withdraw", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hasContributed = myContribution && myContribution.amount > 0;
+  const myRemainingMax = hasContributed ? remaining + myContribution.amount : remaining;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200 animate-slide-up group">
@@ -124,7 +172,67 @@ export default function ItemCard({ item, currency, token, isOwner, onUpdate }: I
           </a>
         )}
 
-        {!isOwner && !isFullyFunded && token && (
+        {/* User's existing contribution */}
+        {!isOwner && hasContributed && !showEdit && (
+          <div className="flex items-center justify-between p-2.5 bg-violet-50 rounded-xl mb-2">
+            <span className="text-sm text-violet-700">
+              Your contribution: <strong>{formatPrice(myContribution.amount, currency)}</strong>
+            </span>
+            {!isArchived && (
+              <button
+                onClick={() => { setShowEdit(true); setAmount((myContribution.amount / 100).toFixed(2)); }}
+                className="text-xs text-violet-500 hover:text-violet-700 font-medium transition-colors"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Edit contribution form */}
+        {showEdit && !isArchived && (
+          <div className="space-y-2 mb-2 animate-slide-up">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{currency === "USD" ? "$" : currency === "GBP" ? "\u00A3" : "\u20AC"}</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="1.00"
+                  max={(myRemainingMax / 100).toFixed(2)}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full pl-7 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-shadow"
+                />
+              </div>
+              <button
+                onClick={handleUpdateContribution}
+                disabled={loading}
+                className="px-4 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-700 disabled:opacity-50 transition-colors"
+              >
+                {loading ? "..." : "Save"}
+              </button>
+            </div>
+            <div className="flex items-center justify-between">
+              <button
+                onClick={handleWithdraw}
+                disabled={loading}
+                className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
+              >
+                Withdraw contribution
+              </button>
+              <button
+                onClick={() => setShowEdit(false)}
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Action buttons for users who haven't contributed */}
+        {!isOwner && !isFullyFunded && !isArchived && !hasContributed && token && (
           <div className="flex gap-2 mt-1">
             {item.total_funded === 0 && (
               <button
@@ -144,13 +252,22 @@ export default function ItemCard({ item, currency, token, isOwner, onUpdate }: I
           </div>
         )}
 
-        {!isOwner && !isFullyFunded && !token && (
+        {!isOwner && isFullyFunded && (
+          <div className="flex items-center justify-center gap-1.5 py-2.5 mt-1 bg-emerald-50 rounded-xl">
+            <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-sm font-medium text-emerald-600">Fully funded!</span>
+          </div>
+        )}
+
+        {!isOwner && !isFullyFunded && !isArchived && !token && (
           <Link href="/login" className="block text-center text-sm text-violet-500 hover:text-violet-700 py-2 transition-colors font-medium">
             Sign in to contribute
           </Link>
         )}
 
-        {showContribute && (
+        {showContribute && !isFullyFunded && (
           <div className="mt-3 space-y-2 animate-slide-up">
             <div className="flex gap-2">
               <div className="relative flex-1">

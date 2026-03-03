@@ -4,6 +4,7 @@ from sqlalchemy import select, func, text
 
 from app.database import get_db
 from app.models.user import User
+from app.models.wishlist import Wishlist
 from app.models.item import Item
 from app.models.contribution import Contribution
 from app.schemas.contribution import ContributionCreate, ContributionUpdate, ContributionResponse
@@ -39,6 +40,11 @@ async def create_contribution(
     item = result.scalar_one_or_none()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
+
+    # Check wishlist is not archived
+    wl = await db.execute(select(Wishlist).where(Wishlist.id == item.wishlist_id))
+    if wl.scalar_one().is_archived:
+        raise HTTPException(status_code=409, detail="This wishlist is archived. Contributions are no longer accepted.")
 
     # Check existing contribution by this user
     existing = await db.execute(
@@ -88,6 +94,11 @@ async def reserve_item(
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
+    # Check wishlist is not archived
+    wl = await db.execute(select(Wishlist).where(Wishlist.id == item.wishlist_id))
+    if wl.scalar_one().is_archived:
+        raise HTTPException(status_code=409, detail="This wishlist is archived. Contributions are no longer accepted.")
+
     # Check no contributions exist
     total_funded, count = await get_item_funding_info(db, item_id)
     if total_funded > 0:
@@ -130,6 +141,11 @@ async def update_contribution(
     item = result.scalar_one_or_none()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
+
+    # Check wishlist is not archived
+    wl = await db.execute(select(Wishlist).where(Wishlist.id == item.wishlist_id))
+    if wl.scalar_one().is_archived:
+        raise HTTPException(status_code=409, detail="This wishlist is archived. Contributions are no longer accepted.")
 
     # Find existing contribution
     result = await db.execute(

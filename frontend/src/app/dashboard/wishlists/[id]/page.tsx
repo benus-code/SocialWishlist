@@ -94,7 +94,7 @@ export default function WishlistDetailPage({ params }: { params: Promise<{ id: s
       if (data.image && !itemImage) setItemImage(data.image);
       setToast({ message: "Product details auto-filled!", type: "success" });
     } catch {
-      // Scraping failed silently - user can fill manually
+      setToast({ message: "Could not fetch product details. You can fill them manually.", type: "info" });
     } finally {
       setScraping(false);
     }
@@ -142,6 +142,17 @@ export default function WishlistDetailPage({ params }: { params: Promise<{ id: s
     setToast({ message: "Item removed", type: "info" });
   };
 
+  const handleToggleArchive = async () => {
+    if (!token || !wishlist) return;
+    try {
+      const updated = await wishlistApi.update(wishlist.id, { is_archived: !wishlist.is_archived }, token);
+      setWishlist(updated);
+      setToast({ message: updated.is_archived ? "Wishlist archived" : "Wishlist restored", type: "success" });
+    } catch {
+      setToast({ message: "Failed to update wishlist", type: "error" });
+    }
+  };
+
   if (authLoading || loading) return <PageSkeleton />;
   if (!wishlist) return null;
 
@@ -179,13 +190,30 @@ export default function WishlistDetailPage({ params }: { params: Promise<{ id: s
           </div>
         )}
 
-        <div className="mt-5">
+        {wishlist.is_archived && (
+          <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
+            <p className="text-sm text-amber-700 font-medium">This wishlist is archived. New contributions are no longer accepted.</p>
+          </div>
+        )}
+
+        <div className="mt-5 flex items-center gap-2">
+          {!wishlist.is_archived && (
+            <button
+              onClick={() => setShowAddItem(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-700 transition-colors shadow-sm"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              Add Item
+            </button>
+          )}
           <button
-            onClick={() => setShowAddItem(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-medium hover:bg-violet-700 transition-colors shadow-sm"
+            onClick={handleToggleArchive}
+            className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${wishlist.is_archived ? "bg-violet-600 text-white hover:bg-violet-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-            Add Item
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+            </svg>
+            {wishlist.is_archived ? "Restore" : "Archive"}
           </button>
         </div>
       </div>

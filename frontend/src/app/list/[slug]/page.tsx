@@ -82,6 +82,8 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
   if (!wishlist) return null;
 
   const isOwner = user?.id === (wishlist as PublicWishlist & { user_id?: string }).user_id;
+  const isExpired = !!(wishlist.event_date && new Date(wishlist.event_date) < new Date(new Date().toDateString()));
+  const effectivelyArchived = wishlist.is_archived || isExpired;
   const totalFunded = items.reduce((s, i) => s + i.total_funded, 0);
   const totalPrice = items.reduce((s, i) => s + i.price, 0);
   const pct = totalPrice > 0 ? Math.round((totalFunded / totalPrice) * 100) : 0;
@@ -133,9 +135,13 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
           </div>
         )}
 
-        {wishlist.is_archived && (
+        {effectivelyArchived && (
           <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
-            <p className="text-sm text-amber-700 font-medium">This wishlist has been archived. New contributions are no longer accepted.</p>
+            <p className="text-sm text-amber-700 font-medium">
+              {isExpired && !wishlist.is_archived
+                ? "This event has passed. New contributions are no longer accepted."
+                : "This wishlist has been archived. New contributions are no longer accepted."}
+            </p>
           </div>
         )}
       </div>
@@ -155,6 +161,7 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
               currency={wishlist.currency}
               token={token}
               isOwner={isOwner}
+              isArchived={effectivelyArchived}
               onUpdate={fetchData}
             />
           ))}
