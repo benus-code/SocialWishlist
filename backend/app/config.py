@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # Resend (email)
     RESEND_API_KEY: str = ""
-    RESEND_FROM_EMAIL: str = "noreply@rexiarwon.resend.app"
+    RESEND_FROM_EMAIL: str = "onboarding@resend.dev"
     FRONTEND_URL: str = "http://localhost:3000"
 
     model_config = {"env_file": ".env"}
