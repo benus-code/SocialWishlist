@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { wishlistApi, Wishlist } from "@/lib/api";
 import Modal from "@/components/Modal";
@@ -14,6 +14,7 @@ import { ListItemSkeleton } from "@/components/Skeleton";
 export default function DashboardPage() {
   const { user, token, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [wishlists, setWishlists] = useState<Wishlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -33,6 +34,15 @@ export default function DashboardPage() {
       wishlistApi.list(token).then(setWishlists).finally(() => setLoading(false));
     }
   }, [token]);
+
+  // Welcome flow: show toast + auto-open create modal for new users
+  useEffect(() => {
+    if (searchParams.get("welcome") === "1" && !loading && !authLoading) {
+      setToast({ message: `Welcome to Wishly${user?.display_name ? `, ${user.display_name}` : ""}! Create your first wishlist.`, type: "success" });
+      setShowCreate(true);
+      router.replace("/dashboard");
+    }
+  }, [searchParams, loading, authLoading, user, router]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

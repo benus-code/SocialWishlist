@@ -18,6 +18,10 @@ class GoogleAuthRequest(BaseModel):
     credential: str
 
 
+class UserUpdate(BaseModel):
+    display_name: str | None = Field(None, min_length=1, max_length=100)
+
+
 class UserResponse(BaseModel):
     id: uuid.UUID
     email: str

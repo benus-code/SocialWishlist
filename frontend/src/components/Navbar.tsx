@@ -35,6 +35,25 @@ export default function Navbar() {
               >
                 My Lists
               </Link>
+              <Link
+                href="/contributions"
+                className="text-sm px-3 py-1.5 text-gray-600 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors font-medium hidden sm:block"
+              >
+                Contributions
+              </Link>
+              <Link
+                href="/profile"
+                className="text-sm px-3 py-1.5 text-gray-600 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
+                title="Profile"
+              >
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="w-6 h-6 rounded-full" />
+                ) : (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                )}
+              </Link>
               <button
                 onClick={handleLogout}
                 className="text-sm px-3 py-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"

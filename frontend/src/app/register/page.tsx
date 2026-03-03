@@ -21,7 +21,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(email, password, displayName || undefined);
-      router.push("/dashboard");
+      router.push("/dashboard?welcome=1");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
@@ -33,7 +33,7 @@ export default function RegisterPage() {
     setError("");
     try {
       await loginWithGoogle(credential);
-      router.push("/dashboard");
+      router.push("/dashboard?welcome=1");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Google sign-in failed");
     }

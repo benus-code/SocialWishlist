@@ -65,7 +65,22 @@ export const authApi = {
     apiFetch<{ client_id: string }>("/api/auth/google/client-id").catch(() => null),
   logout: () => apiFetch("/api/auth/logout", { method: "POST" }),
   me: (token: string) => apiFetch<User>("/api/auth/me", { token }),
+  updateProfile: (data: { display_name?: string }, token: string) =>
+    apiFetch<User>("/api/auth/me", { method: "PUT", body: JSON.stringify(data), token }),
+  myContributions: (token: string) =>
+    apiFetch<MyContribution[]>("/api/auth/me/contributions", { token }),
 };
+
+export interface MyContribution {
+  id: string;
+  amount: number;
+  created_at: string;
+  item_name: string;
+  item_price: number;
+  item_image_url: string | null;
+  wishlist_title: string;
+  wishlist_slug: string | null;
+}
 
 // Wishlists
 export interface Wishlist {

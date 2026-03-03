@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 import httpx
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.user import UserRegister, UserLogin, GoogleAuthRequest, TokenResponse, UserResponse
+from app.models.contribution import Contribution
+from app.models.item import Item
+from app.models.wishlist import Wishlist
+from app.schemas.user import UserRegister, UserLogin, UserUpdate, GoogleAuthRequest, TokenResponse, UserResponse
 from app.services.auth import hash_password, verify_password, create_access_token, get_current_user
 from app.config import settings
 
@@ -121,3 +125,43 @@ async def logout(response: Response):
 @router.get("/me", response_model=UserResponse)
 async def get_me(user: User = Depends(get_current_user)):
     return UserResponse.model_validate(user)
+
+
+@router.put("/me", response_model=UserResponse)
+async def update_me(data: UserUpdate, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    if data.display_name is not None:
+        user.display_name = data.display_name
+    await db.commit()
+    await db.refresh(user)
+    return UserResponse.model_validate(user)
+
+
+@router.get("/me/contributions")
+async def get_my_contributions(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Contribution)
+        .where(Contribution.user_id == user.id, Contribution.amount > 0)
+        .order_by(Contribution.created_at.desc())
+    )
+    contributions = result.scalars().all()
+
+    items_data = []
+    for c in contributions:
+        item_result = await db.execute(select(Item).where(Item.id == c.item_id))
+        item = item_result.scalar_one_or_none()
+        if not item:
+            continue
+        wl_result = await db.execute(select(Wishlist).where(Wishlist.id == item.wishlist_id))
+        wl = wl_result.scalar_one_or_none()
+        items_data.append({
+            "id": str(c.id),
+            "amount": c.amount,
+            "created_at": c.created_at.isoformat(),
+            "item_name": item.name,
+            "item_price": item.price,
+            "item_image_url": item.image_url,
+            "wishlist_title": wl.title if wl else "Unknown",
+            "wishlist_slug": wl.slug if wl else None,
+        })
+
+    return items_data
