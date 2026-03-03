@@ -26,9 +26,9 @@ class Settings(BaseSettings):
     # Minimum contribution in cents (default 100 = 1 EUR)
     MIN_CONTRIBUTION_CENTS: int = 100
 
-    # Resend (email)
-    RESEND_API_KEY: str = ""
-    RESEND_FROM_EMAIL: str = "onboarding@resend.dev"
+    # Brevo (email)
+    BREVO_API_KEY: str = ""
+    BREVO_SENDER_EMAIL: str = "noreply@wishly.app"
     FRONTEND_URL: str = "http://localhost:3000"
 
     model_config = {"env_file": ".env"}

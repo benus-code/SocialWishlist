@@ -1,21 +1,24 @@
-import resend
+import httpx
 from app.config import settings
+
+BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
 
 
 def send_password_reset_email(to_email: str, reset_token: str) -> bool:
-    if not settings.RESEND_API_KEY:
+    if not settings.BREVO_API_KEY:
         print(f"[DEV] Password reset link: {settings.FRONTEND_URL}/reset-password?token={reset_token}")
         return True
 
-    resend.api_key = settings.RESEND_API_KEY
     reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
 
-    try:
-        resend.Emails.send({
-            "from": settings.RESEND_FROM_EMAIL,
-            "to": [to_email],
-            "subject": "Réinitialiser votre mot de passe - Wishly",
-            "html": f"""
+    payload = {
+        "sender": {
+            "name": "Wishly",
+            "email": settings.BREVO_SENDER_EMAIL,
+        },
+        "to": [{"email": to_email}],
+        "subject": "Réinitialiser votre mot de passe - Wishly",
+        "htmlContent": f"""
             <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
                 <div style="text-align: center; margin-bottom: 24px;">
                     <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-radius: 12px; display: inline-flex; align-items: center; justify-content: center;">
@@ -36,7 +39,19 @@ def send_password_reset_email(to_email: str, reset_token: str) -> bool:
                 </p>
             </div>
             """,
-        })
+    }
+
+    try:
+        response = httpx.post(
+            BREVO_API_URL,
+            headers={
+                "api-key": settings.BREVO_API_KEY,
+                "content-type": "application/json",
+                "accept": "application/json",
+            },
+            json=payload,
+        )
+        response.raise_for_status()
         return True
     except Exception as e:
         print(f"Failed to send password reset email: {e}")
