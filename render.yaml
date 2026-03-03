@@ -25,6 +25,12 @@ services:
         sync: false
       - key: MIN_CONTRIBUTION_CENTS
         value: "100"
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
 
   - type: web
     name: socialwishlist-frontend
