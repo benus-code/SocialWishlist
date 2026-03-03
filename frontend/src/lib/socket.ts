@@ -10,6 +10,10 @@ export function getSocket(): Socket {
     socket = io(WS_URL, {
       transports: ["websocket", "polling"],
       autoConnect: false,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
     });
     // Rejoin all active rooms on every (re)connection
     socket.on("connect", () => {
