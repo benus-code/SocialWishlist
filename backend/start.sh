@@ -21,7 +21,22 @@ async def stamp_if_needed():
             await conn.execute(text('CREATE TABLE alembic_version (version_num VARCHAR(32) NOT NULL)'))
             await conn.execute(text(\"INSERT INTO alembic_version VALUES ('002')\"))
         else:
-            print('alembic_version table already exists, skipping stamp.')
+            # Fix: if previously stamped at 001 but 002 tables already exist, update to 002
+            result2 = await conn.execute(text(\"SELECT version_num FROM alembic_version\"))
+            current = result2.scalar()
+            if current == '001':
+                # Check if password_reset_tokens already exists
+                result3 = await conn.execute(text(
+                    \"SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'password_reset_tokens')\"
+                ))
+                prt_exists = result3.scalar()
+                if prt_exists:
+                    print('Updating stamp from 001 to 002 (table already exists)...')
+                    await conn.execute(text(\"UPDATE alembic_version SET version_num = '002'\"))
+                else:
+                    print('At revision 001, will migrate to head.')
+            else:
+                print(f'Already at revision {current}, skipping stamp.')
     await engine.dispose()
 
 asyncio.run(stamp_if_needed())
