@@ -64,6 +64,16 @@ export const authApi = {
   googleClientId: () =>
     apiFetch<{ client_id: string }>("/api/auth/google/client-id").catch(() => null),
   logout: () => apiFetch("/api/auth/logout", { method: "POST" }),
+  forgotPassword: (email: string) =>
+    apiFetch<{ message: string }>("/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (token: string, password: string) =>
+    apiFetch<{ message: string }>("/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
+    }),
   me: (token: string) => apiFetch<User>("/api/auth/me", { token }),
   updateProfile: (data: { display_name?: string }, token: string) =>
     apiFetch<User>("/api/auth/me", { method: "PUT", body: JSON.stringify(data), token }),
