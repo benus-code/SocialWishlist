@@ -36,6 +36,12 @@
 ### Phase 4 - Alembic ✅
 - [x] **4.1** Alembic configuré (async, migration initiale, auto-migrate au démarrage)
 
+### Phase 5 - Polish final ✅
+- [x] **5.1** Landing page améliorée (mockup app, occasions, 4 features, privacy section, CTA)
+- [x] **5.2** Onboarding (welcome toast + auto-open create modal après inscription)
+- [x] **5.3** Page profil (/profile, avatar, edit display_name, PUT /api/auth/me)
+- [x] **5.4** Page Mes contributions (/contributions, GET /api/auth/me/contributions, historique)
+
 ---
 
 ## CE QUI RESTE À FAIRE
@@ -49,26 +55,6 @@
   - Base de données : PostgreSQL managé
   - Variables d'environnement configurées
   - HTTPS + domaine fonctionnel
-
-### Phase 5 - Polish final (si temps restant) ✨
-> "La finition - pour que le résultat ressemble à un produit fini"
-
-- [ ] **5.1** Améliorer la landing page
-  - Ajouter une démo visuelle / screenshot
-  - Testimonials fictifs ou exemples d'utilisation
-  - CTA plus impactant
-
-- [ ] **5.2** Onboarding premier utilisateur
-  - Après inscription, guider vers "Créer ma première liste"
-  - Tooltip ou guide contextuel
-
-- [ ] **5.3** Profil utilisateur
-  - Page profil avec avatar, nom
-  - Modifier son display_name
-
-- [ ] **5.4** Notifications / historique contributions
-  - Page "Mes contributions" pour voir ses participations
-  - Historique des contributions passées
 
 ---
 
