@@ -10,6 +10,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import EmptyState from "@/components/EmptyState";
 import Toast from "@/components/Toast";
 import { ListItemSkeleton } from "@/components/Skeleton";
+import OnboardingTour from "@/components/OnboardingTour";
 
 export default function DashboardPage() {
   return (
@@ -249,6 +250,7 @@ function DashboardContent() {
       )}
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <OnboardingTour />
     </div>
   );
 }
