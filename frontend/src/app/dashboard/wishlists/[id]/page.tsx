@@ -69,6 +69,20 @@ export default function WishlistDetailPage({ params }: { params: Promise<{ id: s
     return () => { socket.off("item_updated", handler); leaveWishlist(wishlist.id); };
   }, [wishlist?.id]);
 
+  // Polling fallback: refresh data periodically + when tab becomes visible
+  useEffect(() => {
+    if (!wishlist) return;
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") fetchData();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    const interval = setInterval(fetchData, 10000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      clearInterval(interval);
+    };
+  }, [wishlist?.id, fetchData]);
+
   // URL Autofill
   const handleUrlPaste = async (url: string) => {
     if (!url || !url.startsWith("http")) return;

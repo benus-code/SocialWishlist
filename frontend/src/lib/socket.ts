@@ -13,9 +13,16 @@ export function getSocket(): Socket {
     });
     // Rejoin all active rooms on every (re)connection
     socket.on("connect", () => {
+      console.log("[WS] Connected, rejoining rooms:", [...activeRooms]);
       activeRooms.forEach((id) => {
         socket!.emit("join_wishlist", { wishlist_id: id });
       });
+    });
+    socket.on("disconnect", (reason) => {
+      console.log("[WS] Disconnected:", reason);
+    });
+    socket.on("connect_error", (err) => {
+      console.log("[WS] Connection error:", err.message);
     });
   }
   return socket;
