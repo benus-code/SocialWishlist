@@ -33,14 +33,15 @@ export default function WishlistDetailPage({ params }: { params: Promise<{ id: s
   const [deleteItemInfo, setDeleteItemInfo] = useState<{ has_contributions: boolean; contributor_count: number; total_funded: number } | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isPolling = false) => {
     if (!token) return;
     try {
       const [wl, its] = await Promise.all([wishlistApi.get(id, token), itemApi.list(id)]);
       setWishlist(wl);
       setItems(its);
     } catch {
-      router.push("/dashboard");
+      // Only redirect on initial load, not during polling
+      if (!isPolling) router.push("/dashboard");
     } finally {
       setLoading(false);
     }
@@ -72,11 +73,12 @@ export default function WishlistDetailPage({ params }: { params: Promise<{ id: s
   // Polling fallback: refresh data periodically + when tab becomes visible
   useEffect(() => {
     if (!wishlist) return;
+    const poll = () => fetchData(true);
     const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") fetchData();
+      if (document.visibilityState === "visible") poll();
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
-    const interval = setInterval(fetchData, 3000);
+    const interval = setInterval(poll, 3000);
     return () => {
       document.removeEventListener("visibilitychange", onVisibilityChange);
       clearInterval(interval);

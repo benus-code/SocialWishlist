@@ -19,13 +19,14 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isPolling = false) => {
     try {
       const data = await wishlistApi.getPublic(slug);
       setWishlist(data);
       setItems(data.items);
     } catch {
-      setError("This wishlist no longer exists or has been removed.");
+      // Only show error on initial load, not during polling
+      if (!isPolling) setError("This wishlist no longer exists or has been removed.");
     } finally {
       setLoading(false);
     }
@@ -49,6 +50,21 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
     socket.on("item_updated", handler);
     return () => { socket.off("item_updated", handler); leaveWishlist(wishlist.id); };
   }, [wishlist?.id]);
+
+  // Polling fallback: refresh data periodically + when tab becomes visible
+  useEffect(() => {
+    if (!wishlist) return;
+    const poll = () => fetchData(true);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") poll();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    const interval = setInterval(poll, 3000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      clearInterval(interval);
+    };
+  }, [wishlist?.id, fetchData]);
 
   if (loading) {
     return (

@@ -1,23 +1,26 @@
 import { io, Socket } from "socket.io-client";
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "http://localhost:8000";
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 let socket: Socket | null = null;
 const activeRooms = new Set<string>();
 
 export function getSocket(): Socket {
   if (!socket) {
+    console.log("[WS] Connecting to:", WS_URL);
     socket = io(WS_URL, {
-      transports: ["websocket", "polling"],
+      // Try polling first (more reliable on platforms like Render), then upgrade to websocket
+      transports: ["polling", "websocket"],
       autoConnect: false,
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
+      withCredentials: true,
     });
     // Rejoin all active rooms on every (re)connection
     socket.on("connect", () => {
-      console.log("[WS] Connected, rejoining rooms:", [...activeRooms]);
+      console.log("[WS] Connected (transport:", socket?.io?.engine?.transport?.name, "), rejoining rooms:", [...activeRooms]);
       activeRooms.forEach((id) => {
         socket!.emit("join_wishlist", { wishlist_id: id });
       });

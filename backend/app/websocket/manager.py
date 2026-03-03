@@ -5,8 +5,10 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-origins = [o.strip() for o in settings.CORS_ORIGINS.split(",")]
-sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=origins)
+origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
+# If "*" is in origins or origins is empty, allow all (useful for initial deployment)
+sio_origins = "*" if ("*" in origins or not origins) else origins
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=sio_origins)
 
 
 @sio.event
