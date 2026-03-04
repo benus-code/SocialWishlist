@@ -1,7 +1,7 @@
 import {getToken} from '../utils/storage';
 
 // Change this to your deployed backend URL
-const BASE_URL = 'https://socialwishlist-api.onrender.com';
+const BASE_URL = 'https://socialwishlist-backend.onrender.com';
 
 type RequestOptions = {
   method?: string;
