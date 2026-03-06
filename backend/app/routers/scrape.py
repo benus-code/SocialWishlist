@@ -3,6 +3,7 @@ from pydantic import BaseModel, HttpUrl
 import httpx
 from bs4 import BeautifulSoup
 import re
+import json
 
 router = APIRouter(prefix="/api/scrape", tags=["scrape"])
 
@@ -111,13 +112,67 @@ async def scrape_url(data: ScrapeRequest):
     elif soup.h1:
         title = soup.h1.get_text(strip=True)
 
-    # Extract image: og:image > product image > first large image
+    # Extract image: og:image > Amazon-specific > product image > first large image
     image = None
     og_image = soup.find("meta", property="og:image")
     if og_image and og_image.get("content"):
         image = make_absolute_url(og_image["content"], base_url)
-    else:
-        # Look for product images
+
+    # For Amazon and similar sites, og:image may be missing or low-quality
+    # Try Amazon-specific selectors
+    if not image or "amazon" in base_url.lower():
+        amazon_image = None
+        # Amazon uses data-old-hires for high-res product images
+        for img_id in ["landingImage", "imgBlkFront", "main-image"]:
+            img = soup.find("img", id=img_id)
+            if img:
+                amazon_image = (
+                    img.get("data-old-hires")
+                    or img.get("src")
+                    or img.get("data-src")
+                )
+                if amazon_image:
+                    break
+        # Amazon data-a-dynamic-image contains JSON with image URLs
+        if not amazon_image:
+            img = soup.find("img", attrs={"data-a-dynamic-image": True})
+            if img:
+                try:
+                    dyn = json.loads(img["data-a-dynamic-image"])
+                    # Pick the largest image (keys are URLs, values are [w, h])
+                    if dyn:
+                        amazon_image = max(dyn, key=lambda u: dyn[u][0] * dyn[u][1])
+                except (json.JSONDecodeError, TypeError, ValueError):
+                    amazon_image = img.get("src")
+        # Also check class="a-dynamic-image"
+        if not amazon_image:
+            img = soup.find("img", class_=re.compile(r"a-dynamic-image", re.I))
+            if img:
+                amazon_image = img.get("data-old-hires") or img.get("src")
+        if amazon_image:
+            image = make_absolute_url(amazon_image, base_url)
+
+    # Try JSON-LD for image
+    if not image:
+        for script in soup.find_all("script", type="application/ld+json"):
+            try:
+                ld_data = json.loads(script.string)
+                if isinstance(ld_data, list):
+                    ld_data = ld_data[0] if ld_data else {}
+                ld_image = ld_data.get("image")
+                if ld_image:
+                    if isinstance(ld_image, list):
+                        ld_image = ld_image[0]
+                    if isinstance(ld_image, dict):
+                        ld_image = ld_image.get("url") or ld_image.get("contentUrl")
+                    if isinstance(ld_image, str) and ld_image:
+                        image = make_absolute_url(ld_image, base_url)
+                        break
+            except (json.JSONDecodeError, TypeError):
+                continue
+
+    # Generic product image selectors as fallback
+    if not image:
         for selector in [
             {"class": re.compile(r"product.*image|gallery.*image|main.*image", re.I)},
             {"id": re.compile(r"product.*image|main.*image", re.I)},
@@ -132,7 +187,6 @@ async def scrape_url(data: ScrapeRequest):
     currency = None
 
     # Try structured data first (JSON-LD)
-    import json
     for script in soup.find_all("script", type="application/ld+json"):
         try:
             ld_data = json.loads(script.string)
