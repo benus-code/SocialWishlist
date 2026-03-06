@@ -24,8 +24,11 @@ def extract_price(text: str) -> tuple[int | None, str | None]:
     if not text:
         return None, None
     text = text.strip()
+    # Remove non-breaking spaces, zero-width chars, etc.
+    text = text.replace("\xa0", " ").replace("\u200b", "").replace("\u200e", "")
+
     # Common patterns: $29.99, 29,99 EUR, EUR 29.99, 29.99€
-    currency_symbols = {"$": "USD", "€": "EUR", "£": "GBP", "¥": "JPY"}
+    currency_symbols = {"$": "USD", "€": "EUR", "£": "GBP", "¥": "JPY", "₹": "INR"}
     currency = None
 
     for symbol, curr in currency_symbols.items():
@@ -36,31 +39,37 @@ def extract_price(text: str) -> tuple[int | None, str | None]:
 
     # Try to find currency code
     if not currency:
-        for code in ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF"]:
+        for code in ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "INR", "SEK", "NOK", "DKK", "PLN", "CZK"]:
             if code in text.upper():
                 currency = code
                 text = re.sub(code, "", text, flags=re.IGNORECASE)
                 break
 
     # Extract numeric value
-    # Handle both 1,234.56 and 1.234,56 formats
-    match = re.search(r"(\d[\d\s]*[.,]?\d*)", text.strip())
+    # Handle formats: 1,234.56 / 1.234,56 / 1 234,56 / 29.99 / 29,99
+    match = re.search(r"(\d[\d\s.,]*\d|\d+)", text.strip())
     if match:
-        price_str = match.group(1).replace(" ", "")
+        price_str = match.group(1).replace(" ", "").replace("\u00a0", "")
         # Determine decimal separator
         if "," in price_str and "." in price_str:
-            if price_str.index(",") > price_str.index("."):
+            if price_str.rindex(",") > price_str.rindex("."):
+                # Format: 1.234,56 (European)
                 price_str = price_str.replace(".", "").replace(",", ".")
             else:
+                # Format: 1,234.56 (US)
                 price_str = price_str.replace(",", "")
         elif "," in price_str:
             parts = price_str.split(",")
-            if len(parts[-1]) == 2:
+            if len(parts[-1]) <= 2:
+                # Likely decimal: 29,99 or 1234,5
                 price_str = price_str.replace(",", ".")
             else:
+                # Likely thousands: 1,234
                 price_str = price_str.replace(",", "")
         try:
-            return int(float(price_str) * 100), currency or "EUR"
+            val = float(price_str)
+            if val > 0:
+                return int(val * 100), currency or "EUR"
         except ValueError:
             pass
 
@@ -186,49 +195,99 @@ async def scrape_url(data: ScrapeRequest):
     price = None
     currency = None
 
-    # Try structured data first (JSON-LD)
+    # Try structured data first (JSON-LD) — search nested @graph arrays too
     for script in soup.find_all("script", type="application/ld+json"):
+        if price is not None:
+            break
         try:
             ld_data = json.loads(script.string)
+            # Flatten: could be a single object, a list, or contain @graph
+            items = []
             if isinstance(ld_data, list):
-                ld_data = ld_data[0] if ld_data else {}
-            offers = ld_data.get("offers", ld_data.get("Offers", {}))
-            if isinstance(offers, list):
-                offers = offers[0] if offers else {}
-            if isinstance(offers, dict):
-                p = offers.get("price") or offers.get("lowPrice")
-                if p:
-                    price = int(float(str(p)) * 100)
-                    currency = offers.get("priceCurrency", "EUR")
-                    break
+                items = ld_data
+            elif isinstance(ld_data, dict):
+                if "@graph" in ld_data:
+                    items = ld_data["@graph"] if isinstance(ld_data["@graph"], list) else [ld_data["@graph"]]
+                else:
+                    items = [ld_data]
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                offers = item.get("offers", item.get("Offers"))
+                if offers is None:
+                    # The item itself might be an Offer
+                    if item.get("@type") in ("Offer", "AggregateOffer"):
+                        offers = item
+                    else:
+                        continue
+                if isinstance(offers, list):
+                    offers = offers[0] if offers else {}
+                if isinstance(offers, dict):
+                    p = offers.get("price") or offers.get("lowPrice")
+                    if p:
+                        price = int(float(str(p).replace(",", ".").replace(" ", "")) * 100)
+                        currency = offers.get("priceCurrency", "EUR")
+                        break
         except (json.JSONDecodeError, ValueError, TypeError):
             continue
 
-    # Try meta tags
+    # Try meta tags (og, product, twitter)
     if price is None:
-        price_meta = soup.find("meta", property="product:price:amount") or soup.find("meta", attrs={"name": "price"})
-        if price_meta and price_meta.get("content"):
-            try:
-                price = int(float(price_meta["content"]) * 100)
-            except ValueError:
-                pass
-            currency_meta = soup.find("meta", property="product:price:currency")
-            if currency_meta and currency_meta.get("content"):
-                currency = currency_meta["content"]
+        for meta_query in [
+            {"property": "product:price:amount"},
+            {"attrs": {"name": "price"}},
+            {"attrs": {"name": "twitter:data1"}},
+            {"property": "og:price:amount"},
+        ]:
+            price_meta = soup.find("meta", **meta_query)
+            if price_meta and price_meta.get("content"):
+                extracted_price, extracted_curr = extract_price(price_meta["content"])
+                if extracted_price:
+                    price = extracted_price
+                    currency_meta = soup.find("meta", property="product:price:currency") or soup.find("meta", property="og:price:currency")
+                    if currency_meta and currency_meta.get("content"):
+                        currency = currency_meta["content"]
+                    elif extracted_curr:
+                        currency = extracted_curr
+                    break
 
-    # Try common CSS selectors for price
+    # Amazon-specific price extraction
+    if price is None and "amazon" in base_url.lower():
+        for sel in [
+            soup.find("span", class_="a-price-whole"),
+            soup.find("span", id="priceblock_ourprice"),
+            soup.find("span", id="priceblock_dealprice"),
+            soup.find("span", id="price_inside_buybox"),
+            soup.find("span", class_="priceToPay"),
+        ]:
+            if sel:
+                price_text = sel.get_text(strip=True)
+                # a-price-whole might be just "29" — look for sibling fraction
+                if sel.get("class") and "a-price-whole" in sel.get("class", []):
+                    fraction = sel.find_next_sibling("span", class_="a-price-fraction")
+                    if fraction:
+                        price_text = price_text.rstrip(",.") + "." + fraction.get_text(strip=True)
+                price, currency = extract_price(price_text)
+                if price:
+                    break
+
+    # Try common CSS selectors for price (expanded)
     if price is None:
         for selector in [
-            {"class": re.compile(r"price|Price|product-price", re.I)},
             {"itemprop": "price"},
             {"data-price": True},
+            {"class": re.compile(r"product[_-]?price|current[_-]?price|sale[_-]?price|final[_-]?price", re.I)},
+            {"class": re.compile(r"price(?!.*(?:old|was|crossed|compare|original|from))", re.I)},
+            {"id": re.compile(r"price|ourprice", re.I)},
         ]:
             el = soup.find(attrs=selector)
             if el:
                 price_text = el.get("content") or el.get("data-price") or el.get_text()
                 if price_text:
-                    price, currency = extract_price(str(price_text))
+                    price, curr = extract_price(str(price_text))
                     if price:
+                        if not currency:
+                            currency = curr
                         break
 
     return ScrapeResponse(
