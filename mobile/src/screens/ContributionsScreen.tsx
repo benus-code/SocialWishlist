@@ -8,6 +8,7 @@ import {
   Image,
   RefreshControl,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {authApi} from '../api/auth';
@@ -31,6 +32,7 @@ type ContributionItem = {
 type Props = NativeStackScreenProps<any>;
 
 export function ContributionsScreen({navigation}: Props) {
+  const insets = useSafeAreaInsets();
   const [contributions, setContributions] = useState<ContributionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -94,7 +96,7 @@ export function ContributionsScreen({navigation}: Props) {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top}]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
           Mes contributions ({contributions.length})

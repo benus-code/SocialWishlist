@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {wishlistsApi, Wishlist, Item} from '../../api/wishlists';
 import {contributionsApi, Contribution} from '../../api/contributions';
@@ -28,6 +29,7 @@ import {formatPrice, getProgressPercent, getCurrencySymbol} from '../../utils/fo
 type Props = NativeStackScreenProps<any, 'PublicWishlist'>;
 
 export function PublicWishlistScreen({route, navigation}: Props) {
+  const insets = useSafeAreaInsets();
   const {slug} = route.params as {slug: string};
   const {isAuthenticated} = useAuth();
   const [wishlist, setWishlist] = useState<Wishlist | null>(null);
@@ -176,11 +178,14 @@ export function PublicWishlistScreen({route, navigation}: Props) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, {paddingTop: insets.top}]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.headerButton}
+          hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
           <Text style={styles.backButton}>← Retour</Text>
         </TouchableOpacity>
         <Text style={styles.title}>{wishlist.title}</Text>
@@ -342,15 +347,20 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: colors.white,
-    padding: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.gray100,
+  },
+  headerButton: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    marginBottom: spacing.md,
   },
   backButton: {
     fontSize: fonts.sizes.md,
     color: colors.primary,
     fontWeight: '500',
-    marginBottom: spacing.md,
   },
   title: {
     fontSize: fonts.sizes.xxl,

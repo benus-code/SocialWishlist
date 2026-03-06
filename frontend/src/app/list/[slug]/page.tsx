@@ -11,6 +11,14 @@ import { CardSkeleton } from "@/components/Skeleton";
 import { getSocket, joinWishlist, leaveWishlist, ItemUpdateEvent } from "@/lib/socket";
 import Link from "next/link";
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+  }, []);
+  return isMobile;
+}
+
 export default function PublicWishlistPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const { user, token } = useAuth();
@@ -18,6 +26,8 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
+  const [appBannerDismissed, setAppBannerDismissed] = useState(false);
 
   const fetchData = useCallback(async (isPolling = false) => {
     try {
@@ -104,8 +114,42 @@ export default function PublicWishlistPage({ params }: { params: Promise<{ slug:
   const totalPrice = items.reduce((s, i) => s + i.price, 0);
   const pct = totalPrice > 0 ? Math.round((totalFunded / totalPrice) * 100) : 0;
 
+  const appDeepLink = `wishly://list/${slug}`;
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
+      {isMobile && !appBannerDismissed && (
+        <div className="mb-4 p-3.5 bg-violet-50 rounded-xl border border-violet-100 flex items-center justify-between gap-3 animate-fade-in">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+              </svg>
+            </div>
+            <p className="text-sm text-violet-700 truncate">
+              Voir cette liste dans l&apos;app Wishly
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href={appDeepLink}
+              className="px-3 py-1.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors"
+            >
+              Ouvrir
+            </a>
+            <button
+              onClick={() => setAppBannerDismissed(true)}
+              className="text-violet-400 hover:text-violet-600 transition-colors p-1"
+              aria-label="Fermer"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
         <div className="flex items-center gap-3 mb-1">
           <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center shrink-0">

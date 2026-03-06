@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -36,6 +37,7 @@ const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'CAD', 'XOF', 'XAF'];
 type Props = NativeStackScreenProps<any>;
 
 export function DashboardScreen({navigation}: Props) {
+  const insets = useSafeAreaInsets();
   const [wishlists, setWishlists] = useState<Wishlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -157,7 +159,7 @@ export function DashboardScreen({navigation}: Props) {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top}]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
           Mes listes ({wishlists.length})
@@ -298,8 +300,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.lg,
-    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.gray100,

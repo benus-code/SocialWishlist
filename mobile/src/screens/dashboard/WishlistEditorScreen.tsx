@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Clipboard,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {wishlistsApi, Wishlist, Item} from '../../api/wishlists';
 import {itemsApi} from '../../api/items';
@@ -29,6 +30,7 @@ import {formatPrice, formatDate, getProgressPercent} from '../../utils/format';
 type Props = NativeStackScreenProps<any, 'WishlistEditor'>;
 
 export function WishlistEditorScreen({route, navigation}: Props) {
+  const insets = useSafeAreaInsets();
   const {wishlistId} = route.params as {wishlistId: string};
   const [wishlist, setWishlist] = useState<Wishlist | null>(null);
   const [items, setItems] = useState<Item[]>([]);
@@ -194,14 +196,20 @@ export function WishlistEditorScreen({route, navigation}: Props) {
   const overallPercent = getProgressPercent(totalFunded, totalPrice);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top}]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.headerButton}
+            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
             <Text style={styles.backButton}>← Retour</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleShare}>
+          <TouchableOpacity
+            onPress={handleShare}
+            style={styles.headerButton}
+            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
             <Text style={styles.shareButton}>Partager</Text>
           </TouchableOpacity>
         </View>
@@ -351,14 +359,20 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: colors.white,
-    padding: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.gray100,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: spacing.md,
+  },
+  headerButton: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
   },
   backButton: {
     fontSize: fonts.sizes.md,

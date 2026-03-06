@@ -6,6 +6,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAuth} from '../contexts/AuthContext';
 import {authApi} from '../api/auth';
 import {Input} from '../components/Input';
@@ -15,6 +16,7 @@ import {colors, fonts, spacing, radius, shadows} from '../theme';
 import {formatDate} from '../utils/format';
 
 export function ProfileScreen() {
+  const insets = useSafeAreaInsets();
   const {user, logout, refreshUser} = useAuth();
   const [displayName, setDisplayName] = useState(user?.display_name || '');
   const [saving, setSaving] = useState(false);
@@ -52,7 +54,7 @@ export function ProfileScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, {paddingTop: insets.top}]}
       contentContainerStyle={styles.content}>
       {/* Avatar */}
       <View style={styles.avatarSection}>
