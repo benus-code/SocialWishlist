@@ -2,6 +2,7 @@ import React from 'react';
 import {Text} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {useTranslation} from 'react-i18next';
 import {DashboardScreen} from '../screens/dashboard/DashboardScreen';
 import {WishlistEditorScreen} from '../screens/dashboard/WishlistEditorScreen';
 import {ContributionsScreen} from '../screens/ContributionsScreen';
@@ -37,6 +38,8 @@ function ContribStackNavigator() {
 const Tab = createBottomTabNavigator();
 
 export function MainTabs() {
+  const {t} = useTranslation('navigation');
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -56,7 +59,7 @@ export function MainTabs() {
         name="Dashboard"
         component={DashboardStackNavigator}
         options={{
-          tabBarLabel: 'Mes listes',
+          tabBarLabel: t('myLists'),
           tabBarIcon: ({color}) => (
             <TabIcon icon="🎁" color={color} />
           ),
@@ -66,7 +69,7 @@ export function MainTabs() {
         name="Contributions"
         component={ContribStackNavigator}
         options={{
-          tabBarLabel: 'Contributions',
+          tabBarLabel: t('contributions'),
           tabBarIcon: ({color}) => (
             <TabIcon icon="💝" color={color} />
           ),
@@ -76,7 +79,7 @@ export function MainTabs() {
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarLabel: 'Profil',
+          tabBarLabel: t('profile'),
           tabBarIcon: ({color}) => (
             <TabIcon icon="👤" color={color} />
           ),

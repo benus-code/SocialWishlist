@@ -1,0 +1,33 @@
+{
+  "title": "My lists ({{count}})",
+  "newList": "+ New list",
+  "emptyTitle": "No lists yet",
+  "emptyDescription": "Create your first wishlist and share it with your loved ones.",
+  "emptyAction": "Create my first list",
+  "modal": {
+    "cancel": "Cancel",
+    "title": "New list",
+    "titleLabel": "Title",
+    "titlePlaceholder": "E.g.: My birthday 2026",
+    "occasion": "Occasion",
+    "currency": "Currency",
+    "eventDate": "Event date",
+    "chooseDateOptional": "Choose a date (optional)",
+    "createList": "Create list"
+  },
+  "occasions": {
+    "birthday": "Birthday",
+    "christmas": "Christmas",
+    "wedding": "Wedding",
+    "housewarming": "Housewarming",
+    "babyShower": "Baby Shower",
+    "graduation": "Graduation",
+    "other": "Other"
+  },
+  "deleteTitle": "Delete list",
+  "deleteMessage": "Are you sure you want to delete \"{{title}}\"? This action is irreversible.",
+  "titleRequired": "Title is required",
+  "listCreated": "List created!",
+  "listDeleted": "List deleted",
+  "deleteError": "Error deleting list"
+}

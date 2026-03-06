@@ -1,0 +1,9 @@
+{
+  "itemCard": {
+    "funded": "Funded!",
+    "contributor": "{{count}} contributor",
+    "contributor_plural": "{{count}} contributors",
+    "viewProduct": "View product",
+    "delete": "Delete"
+  }
+}

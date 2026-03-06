@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {useTranslation} from 'react-i18next';
 import {wishlistsApi, Wishlist, Item} from '../../api/wishlists';
 import {contributionsApi, Contribution} from '../../api/contributions';
 import {useAuth} from '../../contexts/AuthContext';
@@ -29,6 +30,8 @@ import {formatPrice, getProgressPercent, getCurrencySymbol} from '../../utils/fo
 type Props = NativeStackScreenProps<any, 'PublicWishlist'>;
 
 export function PublicWishlistScreen({route, navigation}: Props) {
+  const {t} = useTranslation('publicWishlist');
+  const {t: tCommon} = useTranslation('common');
   const insets = useSafeAreaInsets();
   const {slug} = route.params as {slug: string};
   const {isAuthenticated} = useAuth();
@@ -66,12 +69,12 @@ export function PublicWishlistScreen({route, navigation}: Props) {
       setWishlist(wl);
       setItems(wl.items || []);
     } catch {
-      setToast({visible: true, message: 'Liste introuvable', type: 'error'});
+      setToast({visible: true, message: t('listNotFound'), type: 'error'});
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [slug]);
+  }, [slug, t]);
 
   useEffect(() => {
     loadData();
@@ -99,11 +102,11 @@ export function PublicWishlistScreen({route, navigation}: Props) {
     setContributing(true);
     try {
       await contributionsApi.reserve(selectedItem.id);
-      setToast({visible: true, message: 'Article réservé !', type: 'success'});
+      setToast({visible: true, message: t('itemReserved'), type: 'success'});
       setSelectedItem(null);
       loadData();
     } catch (err: any) {
-      setToast({visible: true, message: err.message || 'Erreur', type: 'error'});
+      setToast({visible: true, message: err.message || tCommon('error'), type: 'error'});
     } finally {
       setContributing(false);
     }
@@ -113,7 +116,7 @@ export function PublicWishlistScreen({route, navigation}: Props) {
     if (!selectedItem || !amount) return;
     const amountCents = Math.round(Number(amount) * 100);
     if (isNaN(amountCents) || amountCents <= 0) {
-      setToast({visible: true, message: 'Montant invalide', type: 'error'});
+      setToast({visible: true, message: t('invalidAmount'), type: 'error'});
       return;
     }
 
@@ -121,15 +124,15 @@ export function PublicWishlistScreen({route, navigation}: Props) {
     try {
       if (editingContribution && myContribution) {
         await contributionsApi.update(selectedItem.id, amountCents);
-        setToast({visible: true, message: 'Contribution modifiée !', type: 'success'});
+        setToast({visible: true, message: t('contributionModified'), type: 'success'});
       } else {
         await contributionsApi.create(selectedItem.id, amountCents);
-        setToast({visible: true, message: 'Merci pour votre contribution !', type: 'success'});
+        setToast({visible: true, message: t('thankYou'), type: 'success'});
       }
       setSelectedItem(null);
       loadData();
     } catch (err: any) {
-      setToast({visible: true, message: err.message || 'Erreur', type: 'error'});
+      setToast({visible: true, message: err.message || tCommon('error'), type: 'error'});
     } finally {
       setContributing(false);
     }
@@ -138,21 +141,21 @@ export function PublicWishlistScreen({route, navigation}: Props) {
   const handleWithdraw = () => {
     if (!selectedItem) return;
     Alert.alert(
-      'Retirer ma contribution',
-      'Voulez-vous vraiment retirer votre contribution ?',
+      t('withdrawTitle'),
+      t('withdrawMessage'),
       [
-        {text: 'Annuler', style: 'cancel'},
+        {text: tCommon('cancel'), style: 'cancel'},
         {
-          text: 'Retirer',
+          text: t('withdraw'),
           style: 'destructive',
           onPress: async () => {
             try {
               await contributionsApi.update(selectedItem.id, 0);
-              setToast({visible: true, message: 'Contribution retirée', type: 'success'});
+              setToast({visible: true, message: t('contributionWithdrawn'), type: 'success'});
               setSelectedItem(null);
               loadData();
             } catch {
-              setToast({visible: true, message: 'Erreur', type: 'error'});
+              setToast({visible: true, message: tCommon('error'), type: 'error'});
             }
           },
         },
@@ -165,8 +168,8 @@ export function PublicWishlistScreen({route, navigation}: Props) {
     return (
       <EmptyState
         icon="🔍"
-        title="Liste introuvable"
-        description="Cette liste n'existe pas ou a été supprimée."
+        title={t('listNotFound')}
+        description={t('listNotFoundDescription')}
       />
     );
   }
@@ -186,12 +189,12 @@ export function PublicWishlistScreen({route, navigation}: Props) {
           onPress={() => navigation.goBack()}
           style={styles.headerButton}
           hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-          <Text style={styles.backButton}>← Retour</Text>
+          <Text style={styles.backButton}>{t('back')}</Text>
         </TouchableOpacity>
         <Text style={styles.title}>{wishlist.title}</Text>
         {wishlist.owner && (
           <Text style={styles.owner}>
-            par {wishlist.owner.display_name || 'Anonyme'}
+            {t('by', {name: wishlist.owner.display_name || t('anonymous')})}
           </Text>
         )}
         {wishlist.occasion && (
@@ -207,7 +210,7 @@ export function PublicWishlistScreen({route, navigation}: Props) {
         )}
         {wishlist.is_archived && (
           <View style={styles.archivedBanner}>
-            <Text style={styles.archivedBannerText}>Cette liste est archivée</Text>
+            <Text style={styles.archivedBannerText}>{t('archivedBanner')}</Text>
           </View>
         )}
         {!isAuthenticated && (
@@ -215,7 +218,7 @@ export function PublicWishlistScreen({route, navigation}: Props) {
             style={styles.signInBanner}
             onPress={() => navigation.navigate('AuthStack', {screen: 'Login'})}>
             <Text style={styles.signInText}>
-              Connectez-vous pour contribuer
+              {t('signInToContribute')}
             </Text>
           </TouchableOpacity>
         )}
@@ -246,8 +249,8 @@ export function PublicWishlistScreen({route, navigation}: Props) {
         ListEmptyComponent={
           <EmptyState
             icon="📋"
-            title="Aucun article"
-            description="Cette liste est vide pour le moment."
+            title={t('emptyTitle')}
+            description={t('emptyDescription')}
           />
         }
       />
@@ -271,11 +274,11 @@ export function PublicWishlistScreen({route, navigation}: Props) {
           {myContribution && !editingContribution ? (
             <View style={styles.myContrib}>
               <Text style={styles.myContribText}>
-                Votre contribution : {formatPrice(myContribution.amount, currency)}
+                {t('yourContribution', {amount: formatPrice(myContribution.amount, currency)})}
               </Text>
               <View style={styles.contribActions}>
                 <Button
-                  title="Modifier"
+                  title={t('edit')}
                   onPress={() => {
                     setEditingContribution(true);
                     setAmount((myContribution.amount / 100).toString());
@@ -284,7 +287,7 @@ export function PublicWishlistScreen({route, navigation}: Props) {
                   size="sm"
                 />
                 <Button
-                  title="Retirer"
+                  title={t('withdraw')}
                   onPress={handleWithdraw}
                   variant="danger"
                   size="sm"
@@ -295,7 +298,7 @@ export function PublicWishlistScreen({route, navigation}: Props) {
             <>
               {selectedItem.contributor_count === 0 && (
                 <Button
-                  title="Réserver (prix complet)"
+                  title={t('reserveFullPrice')}
                   onPress={handleReserve}
                   loading={contributing}
                   variant="secondary"
@@ -315,7 +318,7 @@ export function PublicWishlistScreen({route, navigation}: Props) {
                   />
                 </View>
                 <Button
-                  title={editingContribution ? 'Modifier' : 'Contribuer'}
+                  title={editingContribution ? t('edit') : t('contribute')}
                   onPress={handleContribute}
                   loading={contributing}
                   size="md"
@@ -324,7 +327,7 @@ export function PublicWishlistScreen({route, navigation}: Props) {
             </>
           ) : (
             <View style={styles.fullyFundedBanner}>
-              <Text style={styles.fullyFundedText}>Entièrement financé !</Text>
+              <Text style={styles.fullyFundedText}>{t('fullyFunded')}</Text>
             </View>
           )}
         </View>
@@ -334,7 +337,7 @@ export function PublicWishlistScreen({route, navigation}: Props) {
         message={toast.message}
         type={toast.type}
         visible={toast.visible}
-        onDismiss={() => setToast(t => ({...t, visible: false}))}
+        onDismiss={() => setToast(prev => ({...prev, visible: false}))}
       />
     </KeyboardAvoidingView>
   );

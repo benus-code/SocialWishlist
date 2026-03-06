@@ -11,6 +11,7 @@ import {
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {useTranslation} from 'react-i18next';
 import {authApi} from '../api/auth';
 import {EmptyState} from '../components/EmptyState';
 import {LoadingScreen} from '../components/LoadingScreen';
@@ -32,6 +33,7 @@ type ContributionItem = {
 type Props = NativeStackScreenProps<any>;
 
 export function ContributionsScreen({navigation}: Props) {
+  const {t} = useTranslation('contributions');
   const insets = useSafeAreaInsets();
   const [contributions, setContributions] = useState<ContributionItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,11 +101,11 @@ export function ContributionsScreen({navigation}: Props) {
     <View style={[styles.container, {paddingTop: insets.top}]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
-          Mes contributions ({contributions.length})
+          {t('title', {count: contributions.length})}
         </Text>
         {totalAmount > 0 && (
           <Text style={styles.totalAmount}>
-            Total : {formatPrice(totalAmount, 'EUR')}
+            {t('total', {amount: formatPrice(totalAmount, 'EUR')})}
           </Text>
         )}
       </View>
@@ -111,8 +113,8 @@ export function ContributionsScreen({navigation}: Props) {
       {contributions.length === 0 ? (
         <EmptyState
           icon="💝"
-          title="Aucune contribution"
-          description="Vous n'avez pas encore contribué à un cadeau. Parcourez les listes de vos proches !"
+          title={t('emptyTitle')}
+          description={t('emptyDescription')}
         />
       ) : (
         <FlatList

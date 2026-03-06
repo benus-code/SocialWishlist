@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {useTranslation} from 'react-i18next';
 import {useAuth} from '../../contexts/AuthContext';
 import {Input} from '../../components/Input';
 import {Button} from '../../components/Button';
@@ -19,6 +20,7 @@ import type {AuthStackParamList} from '../../navigation/AuthStack';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export function LoginScreen({navigation}: Props) {
+  const {t} = useTranslation('auth');
   const {login} = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,7 +30,7 @@ export function LoginScreen({navigation}: Props) {
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
-      setToast({visible: true, message: 'Veuillez remplir tous les champs', type: 'error'});
+      setToast({visible: true, message: t('login.fillAllFields'), type: 'error'});
       return;
     }
 
@@ -38,7 +40,7 @@ export function LoginScreen({navigation}: Props) {
     } catch (err: any) {
       setToast({
         visible: true,
-        message: err.message || 'Email ou mot de passe incorrect',
+        message: err.message || t('login.invalidCredentials'),
         type: 'error',
       });
     } finally {
@@ -57,14 +59,14 @@ export function LoginScreen({navigation}: Props) {
           <View style={styles.logo}>
             <Text style={styles.logoText}>W</Text>
           </View>
-          <Text style={styles.title}>Wishly</Text>
-          <Text style={styles.subtitle}>Connectez-vous à votre compte</Text>
+          <Text style={styles.title}>{t('login.title')}</Text>
+          <Text style={styles.subtitle}>{t('login.subtitle')}</Text>
         </View>
 
         <View style={styles.form}>
           <Input
-            label="Email"
-            placeholder="votre@email.com"
+            label={t('login.email')}
+            placeholder={t('login.emailPlaceholder')}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -74,8 +76,8 @@ export function LoginScreen({navigation}: Props) {
           />
 
           <Input
-            label="Mot de passe"
-            placeholder="Votre mot de passe"
+            label={t('login.password')}
+            placeholder={t('login.passwordPlaceholder')}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
@@ -90,11 +92,11 @@ export function LoginScreen({navigation}: Props) {
           <TouchableOpacity
             onPress={() => navigation.navigate('ForgotPassword')}
             style={styles.forgotLink}>
-            <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
+            <Text style={styles.forgotText}>{t('login.forgotPassword')}</Text>
           </TouchableOpacity>
 
           <Button
-            title="Se connecter"
+            title={t('login.signIn')}
             onPress={handleLogin}
             loading={loading}
             size="lg"
@@ -103,9 +105,9 @@ export function LoginScreen({navigation}: Props) {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Pas encore de compte ?</Text>
+          <Text style={styles.footerText}>{t('login.noAccount')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.footerLink}> Créer un compte</Text>
+            <Text style={styles.footerLink}>{t('login.createAccount')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -114,7 +116,7 @@ export function LoginScreen({navigation}: Props) {
         message={toast.message}
         type={toast.type}
         visible={toast.visible}
-        onDismiss={() => setToast(t => ({...t, visible: false}))}
+        onDismiss={() => setToast(prev => ({...prev, visible: false}))}
       />
     </KeyboardAvoidingView>
   );

@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {useTranslation} from 'react-i18next';
 import {authApi} from '../../api/auth';
 import {Input} from '../../components/Input';
 import {Button} from '../../components/Button';
@@ -19,6 +20,7 @@ import type {AuthStackParamList} from '../../navigation/AuthStack';
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
 export function ForgotPasswordScreen({navigation}: Props) {
+  const {t} = useTranslation('auth');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -26,7 +28,7 @@ export function ForgotPasswordScreen({navigation}: Props) {
 
   const handleSubmit = async () => {
     if (!email.trim()) {
-      setToast({visible: true, message: 'Veuillez entrer votre email', type: 'error'});
+      setToast({visible: true, message: t('forgotPassword.enterEmail'), type: 'error'});
       return;
     }
 
@@ -36,7 +38,7 @@ export function ForgotPasswordScreen({navigation}: Props) {
       setSent(true);
       setToast({
         visible: true,
-        message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
+        message: t('forgotPassword.emailSent'),
         type: 'success',
       });
     } catch {
@@ -44,7 +46,7 @@ export function ForgotPasswordScreen({navigation}: Props) {
       setSent(true);
       setToast({
         visible: true,
-        message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
+        message: t('forgotPassword.emailSent'),
         type: 'success',
       });
     } finally {
@@ -63,17 +65,17 @@ export function ForgotPasswordScreen({navigation}: Props) {
           <View style={styles.iconCircle}>
             <Text style={styles.icon}>🔑</Text>
           </View>
-          <Text style={styles.title}>Mot de passe oublié</Text>
+          <Text style={styles.title}>{t('forgotPassword.title')}</Text>
           <Text style={styles.subtitle}>
-            Entrez votre email pour recevoir un lien de réinitialisation.
+            {t('forgotPassword.subtitle')}
           </Text>
         </View>
 
         {!sent ? (
           <View style={styles.form}>
             <Input
-              label="Email"
-              placeholder="votre@email.com"
+              label={t('forgotPassword.email')}
+              placeholder={t('forgotPassword.emailPlaceholder')}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -82,7 +84,7 @@ export function ForgotPasswordScreen({navigation}: Props) {
             />
 
             <Button
-              title="Envoyer le lien"
+              title={t('forgotPassword.sendLink')}
               onPress={handleSubmit}
               loading={loading}
               size="lg"
@@ -92,7 +94,7 @@ export function ForgotPasswordScreen({navigation}: Props) {
           <View style={styles.successCard}>
             <Text style={styles.successIcon}>✉️</Text>
             <Text style={styles.successText}>
-              Vérifiez votre boîte mail. Le lien de réinitialisation expire dans 1 heure.
+              {t('forgotPassword.successMessage')}
             </Text>
           </View>
         )}
@@ -100,7 +102,7 @@ export function ForgotPasswordScreen({navigation}: Props) {
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backLink}>
-          <Text style={styles.backText}>← Retour à la connexion</Text>
+          <Text style={styles.backText}>{t('forgotPassword.backToLogin')}</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -108,7 +110,7 @@ export function ForgotPasswordScreen({navigation}: Props) {
         message={toast.message}
         type={toast.type}
         visible={toast.visible}
-        onDismiss={() => setToast(t => ({...t, visible: false}))}
+        onDismiss={() => setToast(prev => ({...prev, visible: false}))}
       />
     </KeyboardAvoidingView>
   );

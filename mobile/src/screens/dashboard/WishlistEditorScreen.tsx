@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {useTranslation} from 'react-i18next';
 import {wishlistsApi, Wishlist, Item} from '../../api/wishlists';
 import {itemsApi} from '../../api/items';
 import {scrapeApi} from '../../api/scrape';
@@ -30,6 +31,8 @@ import {formatPrice, formatDate, getProgressPercent} from '../../utils/format';
 type Props = NativeStackScreenProps<any, 'WishlistEditor'>;
 
 export function WishlistEditorScreen({route, navigation}: Props) {
+  const {t} = useTranslation('wishlistEditor');
+  const {t: tCommon} = useTranslation('common');
   const insets = useSafeAreaInsets();
   const {wishlistId} = route.params as {wishlistId: string};
   const [wishlist, setWishlist] = useState<Wishlist | null>(null);
@@ -71,12 +74,12 @@ export function WishlistEditorScreen({route, navigation}: Props) {
       setWishlist(wl);
       setItems(itms);
     } catch {
-      setToast({visible: true, message: 'Erreur de chargement', type: 'error'});
+      setToast({visible: true, message: tCommon('loadingError'), type: 'error'});
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [wishlistId]);
+  }, [wishlistId, tCommon]);
 
   useEffect(() => {
     loadData();
@@ -90,7 +93,7 @@ export function WishlistEditorScreen({route, navigation}: Props) {
       if (result.title && !itemName) setItemName(result.title);
       if (result.price && !itemPrice) setItemPrice((result.price / 100).toString());
       if (result.image && !itemImage) setItemImage(result.image);
-      setToast({visible: true, message: 'Informations récupérées !', type: 'success'});
+      setToast({visible: true, message: t('infoRetrieved'), type: 'success'});
     } catch {
       // Scraping optional, ignore errors
     } finally {
@@ -100,11 +103,11 @@ export function WishlistEditorScreen({route, navigation}: Props) {
 
   const handleAddItem = async () => {
     if (!itemName.trim()) {
-      setToast({visible: true, message: 'Le nom est requis', type: 'error'});
+      setToast({visible: true, message: t('nameRequired'), type: 'error'});
       return;
     }
     if (!itemPrice || isNaN(Number(itemPrice)) || Number(itemPrice) <= 0) {
-      setToast({visible: true, message: 'Le prix doit être un nombre positif', type: 'error'});
+      setToast({visible: true, message: t('pricePositive'), type: 'error'});
       return;
     }
 
@@ -119,9 +122,9 @@ export function WishlistEditorScreen({route, navigation}: Props) {
       setItems(prev => [...prev, newItem]);
       setModalVisible(false);
       resetItemForm();
-      setToast({visible: true, message: 'Article ajouté !', type: 'success'});
+      setToast({visible: true, message: t('itemAdded'), type: 'success'});
     } catch (err: any) {
-      setToast({visible: true, message: err.message || 'Erreur', type: 'error'});
+      setToast({visible: true, message: err.message || tCommon('error'), type: 'error'});
     } finally {
       setAddingItem(false);
     }
@@ -129,20 +132,20 @@ export function WishlistEditorScreen({route, navigation}: Props) {
 
   const handleDeleteItem = (item: Item) => {
     Alert.alert(
-      'Supprimer l\'article',
-      `Voulez-vous supprimer "${item.name}" ?`,
+      t('deleteItemTitle'),
+      t('deleteItemMessage', {name: item.name}),
       [
-        {text: 'Annuler', style: 'cancel'},
+        {text: tCommon('cancel'), style: 'cancel'},
         {
-          text: 'Supprimer',
+          text: tCommon('delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await itemsApi.delete(wishlistId, item.id);
               setItems(prev => prev.filter(i => i.id !== item.id));
-              setToast({visible: true, message: 'Article supprimé', type: 'success'});
+              setToast({visible: true, message: t('itemDeleted'), type: 'success'});
             } catch {
-              setToast({visible: true, message: 'Erreur lors de la suppression', type: 'error'});
+              setToast({visible: true, message: t('deleteItemError'), type: 'error'});
             }
           },
         },
@@ -155,12 +158,12 @@ export function WishlistEditorScreen({route, navigation}: Props) {
     const shareUrl = `https://wishly.app/list/${wishlist.slug}`;
     try {
       await Share.share({
-        message: `Découvrez ma liste "${wishlist.title}" sur Wishly ! ${shareUrl}`,
+        message: t('shareMessage', {title: wishlist.title, url: shareUrl}),
         url: shareUrl,
       });
     } catch {
       Clipboard.setString(shareUrl);
-      setToast({visible: true, message: 'Lien copié !', type: 'success'});
+      setToast({visible: true, message: t('linkCopied'), type: 'success'});
     }
   };
 
@@ -173,11 +176,11 @@ export function WishlistEditorScreen({route, navigation}: Props) {
       setWishlist(updated);
       setToast({
         visible: true,
-        message: updated.is_archived ? 'Liste archivée' : 'Liste restaurée',
+        message: updated.is_archived ? t('listArchived') : t('listRestored'),
         type: 'success',
       });
     } catch {
-      setToast({visible: true, message: 'Erreur', type: 'error'});
+      setToast({visible: true, message: tCommon('error'), type: 'error'});
     }
   };
 
@@ -204,13 +207,13 @@ export function WishlistEditorScreen({route, navigation}: Props) {
             onPress={() => navigation.goBack()}
             style={styles.headerButton}
             hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-            <Text style={styles.backButton}>← Retour</Text>
+            <Text style={styles.backButton}>{t('back')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleShare}
             style={styles.headerButton}
             hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-            <Text style={styles.shareButton}>Partager</Text>
+            <Text style={styles.shareButton}>{t('share')}</Text>
           </TouchableOpacity>
         </View>
         <Text style={styles.title}>{wishlist.title}</Text>
@@ -230,13 +233,13 @@ export function WishlistEditorScreen({route, navigation}: Props) {
         )}
         <View style={styles.headerActions}>
           <Button
-            title={wishlist.is_archived ? 'Restaurer' : 'Archiver'}
+            title={wishlist.is_archived ? t('restore') : t('archive')}
             onPress={handleToggleArchive}
             variant="secondary"
             size="sm"
           />
           <Button
-            title="+ Ajouter un article"
+            title={t('addItem')}
             onPress={() => setModalVisible(true)}
             size="sm"
           />
@@ -247,9 +250,9 @@ export function WishlistEditorScreen({route, navigation}: Props) {
       {items.length === 0 ? (
         <EmptyState
           icon="🎁"
-          title="Aucun article"
-          description="Ajoutez des articles à votre liste de souhaits."
-          actionLabel="Ajouter un article"
+          title={t('emptyTitle')}
+          description={t('emptyDescription')}
+          actionLabel={t('emptyAction')}
           onAction={() => setModalVisible(true)}
         />
       ) : (
@@ -287,16 +290,16 @@ export function WishlistEditorScreen({route, navigation}: Props) {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => {setModalVisible(false); resetItemForm();}}>
-              <Text style={styles.modalCancel}>Annuler</Text>
+              <Text style={styles.modalCancel}>{t('modal.cancel')}</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Ajouter un article</Text>
+            <Text style={styles.modalTitle}>{t('modal.title')}</Text>
             <View style={{width: 60}} />
           </View>
 
           <View style={styles.modalContent}>
             <Input
-              label="URL du produit (optionnel)"
-              placeholder="https://..."
+              label={t('modal.productUrl')}
+              placeholder={t('modal.urlPlaceholder')}
               value={itemUrl}
               onChangeText={setItemUrl}
               autoCapitalize="none"
@@ -304,27 +307,27 @@ export function WishlistEditorScreen({route, navigation}: Props) {
               onEndEditing={handleScrape}
             />
             {scraping && (
-              <Text style={styles.scrapingText}>Récupération des infos...</Text>
+              <Text style={styles.scrapingText}>{t('modal.scraping')}</Text>
             )}
 
             <Input
-              label="Nom de l'article"
-              placeholder="Ex: Casque Bluetooth"
+              label={t('modal.itemName')}
+              placeholder={t('modal.itemNamePlaceholder')}
               value={itemName}
               onChangeText={setItemName}
             />
 
             <Input
-              label={`Prix (${wishlist.currency})`}
-              placeholder="0.00"
+              label={t('modal.price', {currency: wishlist.currency})}
+              placeholder={t('modal.pricePlaceholder')}
               value={itemPrice}
               onChangeText={setItemPrice}
               keyboardType="decimal-pad"
             />
 
             <Input
-              label="URL de l'image (optionnel)"
-              placeholder="https://..."
+              label={t('modal.imageUrl')}
+              placeholder={t('modal.urlPlaceholder')}
               value={itemImage}
               onChangeText={setItemImage}
               autoCapitalize="none"
@@ -332,7 +335,7 @@ export function WishlistEditorScreen({route, navigation}: Props) {
             />
 
             <Button
-              title="Ajouter l'article"
+              title={t('modal.addItem')}
               onPress={handleAddItem}
               loading={addingItem}
               size="lg"
@@ -346,7 +349,7 @@ export function WishlistEditorScreen({route, navigation}: Props) {
         message={toast.message}
         type={toast.type}
         visible={toast.visible}
-        onDismiss={() => setToast(t => ({...t, visible: false}))}
+        onDismiss={() => setToast(prev => ({...prev, visible: false}))}
       />
     </View>
   );

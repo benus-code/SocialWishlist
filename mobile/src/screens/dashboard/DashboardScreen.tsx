@@ -14,6 +14,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect} from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import {useTranslation} from 'react-i18next';
 import {wishlistsApi, Wishlist} from '../../api/wishlists';
 import {Button} from '../../components/Button';
 import {Input} from '../../components/Input';
@@ -22,21 +23,23 @@ import {Toast} from '../../components/Toast';
 import {colors, fonts, spacing, radius, shadows} from '../../theme';
 import {formatDate} from '../../utils/format';
 
-const OCCASIONS = [
-  'Anniversaire',
-  'Noël',
-  'Mariage',
-  'Crémaillère',
-  'Baby Shower',
-  'Diplôme',
-  'Autre',
-];
+const OCCASION_KEYS = [
+  'birthday',
+  'christmas',
+  'wedding',
+  'housewarming',
+  'babyShower',
+  'graduation',
+  'other',
+] as const;
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'CAD', 'XOF', 'XAF'];
 
 type Props = NativeStackScreenProps<any>;
 
 export function DashboardScreen({navigation}: Props) {
+  const {t} = useTranslation('dashboard');
+  const {t: tCommon} = useTranslation('common');
   const insets = useSafeAreaInsets();
   const [wishlists, setWishlists] = useState<Wishlist[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,12 +60,12 @@ export function DashboardScreen({navigation}: Props) {
       const data = await wishlistsApi.list();
       setWishlists(data);
     } catch {
-      setToast({visible: true, message: 'Erreur de chargement', type: 'error'});
+      setToast({visible: true, message: tCommon('loadingError'), type: 'error'});
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [tCommon]);
 
   useFocusEffect(
     useCallback(() => {
@@ -72,7 +75,7 @@ export function DashboardScreen({navigation}: Props) {
 
   const handleCreate = async () => {
     if (!title.trim()) {
-      setToast({visible: true, message: 'Le titre est requis', type: 'error'});
+      setToast({visible: true, message: t('titleRequired'), type: 'error'});
       return;
     }
 
@@ -87,9 +90,9 @@ export function DashboardScreen({navigation}: Props) {
       setWishlists(prev => [newWishlist, ...prev]);
       setModalVisible(false);
       resetForm();
-      setToast({visible: true, message: 'Liste créée !', type: 'success'});
+      setToast({visible: true, message: t('listCreated'), type: 'success'});
     } catch (err: any) {
-      setToast({visible: true, message: err.message || 'Erreur', type: 'error'});
+      setToast({visible: true, message: err.message || tCommon('error'), type: 'error'});
     } finally {
       setCreating(false);
     }
@@ -97,20 +100,20 @@ export function DashboardScreen({navigation}: Props) {
 
   const handleDelete = (wishlist: Wishlist) => {
     Alert.alert(
-      'Supprimer la liste',
-      `Voulez-vous vraiment supprimer "${wishlist.title}" ? Cette action est irréversible.`,
+      t('deleteTitle'),
+      t('deleteMessage', {title: wishlist.title}),
       [
-        {text: 'Annuler', style: 'cancel'},
+        {text: tCommon('cancel'), style: 'cancel'},
         {
-          text: 'Supprimer',
+          text: tCommon('delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await wishlistsApi.delete(wishlist.id);
               setWishlists(prev => prev.filter(w => w.id !== wishlist.id));
-              setToast({visible: true, message: 'Liste supprimée', type: 'success'});
+              setToast({visible: true, message: t('listDeleted'), type: 'success'});
             } catch {
-              setToast({visible: true, message: 'Erreur lors de la suppression', type: 'error'});
+              setToast({visible: true, message: t('deleteError'), type: 'error'});
             }
           },
         },
@@ -137,7 +140,7 @@ export function DashboardScreen({navigation}: Props) {
           </Text>
           {item.is_archived && (
             <View style={styles.archivedBadge}>
-              <Text style={styles.archivedText}>Archivée</Text>
+              <Text style={styles.archivedText}>{tCommon('archived')}</Text>
             </View>
           )}
         </View>
@@ -162,10 +165,10 @@ export function DashboardScreen({navigation}: Props) {
     <View style={[styles.container, {paddingTop: insets.top}]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
-          Mes listes ({wishlists.length})
+          {t('title', {count: wishlists.length})}
         </Text>
         <Button
-          title="+ Nouvelle liste"
+          title={t('newList')}
           onPress={() => setModalVisible(true)}
           size="sm"
         />
@@ -174,9 +177,9 @@ export function DashboardScreen({navigation}: Props) {
       {wishlists.length === 0 && !loading ? (
         <EmptyState
           icon="🎁"
-          title="Aucune liste pour le moment"
-          description="Créez votre première liste de souhaits et partagez-la avec vos proches."
-          actionLabel="Créer ma première liste"
+          title={t('emptyTitle')}
+          description={t('emptyDescription')}
+          actionLabel={t('emptyAction')}
           onAction={() => setModalVisible(true)}
         />
       ) : (
@@ -207,35 +210,38 @@ export function DashboardScreen({navigation}: Props) {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => {setModalVisible(false); resetForm();}}>
-              <Text style={styles.modalCancel}>Annuler</Text>
+              <Text style={styles.modalCancel}>{t('modal.cancel')}</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Nouvelle liste</Text>
+            <Text style={styles.modalTitle}>{t('modal.title')}</Text>
             <View style={{width: 60}} />
           </View>
 
           <View style={styles.modalContent}>
             <Input
-              label="Titre"
-              placeholder="Ex: Mon anniversaire 2026"
+              label={t('modal.titleLabel')}
+              placeholder={t('modal.titlePlaceholder')}
               value={title}
               onChangeText={setTitle}
             />
 
-            <Text style={styles.fieldLabel}>Occasion</Text>
+            <Text style={styles.fieldLabel}>{t('modal.occasion')}</Text>
             <View style={styles.chipRow}>
-              {OCCASIONS.map(o => (
-                <TouchableOpacity
-                  key={o}
-                  style={[styles.chip, occasion === o && styles.chipActive]}
-                  onPress={() => setOccasion(occasion === o ? '' : o)}>
-                  <Text style={[styles.chipText, occasion === o && styles.chipTextActive]}>
-                    {o}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {OCCASION_KEYS.map(key => {
+                const label = t(`occasions.${key}`);
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    style={[styles.chip, occasion === label && styles.chipActive]}
+                    onPress={() => setOccasion(occasion === label ? '' : label)}>
+                    <Text style={[styles.chipText, occasion === label && styles.chipTextActive]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
-            <Text style={styles.fieldLabel}>Devise</Text>
+            <Text style={styles.fieldLabel}>{t('modal.currency')}</Text>
             <View style={styles.chipRow}>
               {CURRENCIES.map(c => (
                 <TouchableOpacity
@@ -249,12 +255,12 @@ export function DashboardScreen({navigation}: Props) {
               ))}
             </View>
 
-            <Text style={styles.fieldLabel}>Date de l'événement</Text>
+            <Text style={styles.fieldLabel}>{t('modal.eventDate')}</Text>
             <TouchableOpacity
               style={styles.dateButton}
               onPress={() => setShowDatePicker(true)}>
               <Text style={styles.dateButtonText}>
-                {eventDate ? formatDate(eventDate.toISOString()) : 'Choisir une date (optionnel)'}
+                {eventDate ? formatDate(eventDate.toISOString()) : t('modal.chooseDateOptional')}
               </Text>
             </TouchableOpacity>
             {showDatePicker && (
@@ -271,7 +277,7 @@ export function DashboardScreen({navigation}: Props) {
             )}
 
             <Button
-              title="Créer la liste"
+              title={t('modal.createList')}
               onPress={handleCreate}
               loading={creating}
               size="lg"
@@ -285,7 +291,7 @@ export function DashboardScreen({navigation}: Props) {
         message={toast.message}
         type={toast.type}
         visible={toast.visible}
-        onDismiss={() => setToast(t => ({...t, visible: false}))}
+        onDismiss={() => setToast(prev => ({...prev, visible: false}))}
       />
     </View>
   );

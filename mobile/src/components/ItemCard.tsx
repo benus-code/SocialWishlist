@@ -1,5 +1,6 @@
 import React from 'react';
 import {View, Text, Image, StyleSheet, TouchableOpacity, Linking} from 'react-native';
+import {useTranslation} from 'react-i18next';
 import {colors, radius, fonts, spacing, shadows} from '../theme';
 import {ProgressBar} from './ProgressBar';
 import {formatPrice, getProgressPercent} from '../utils/format';
@@ -22,6 +23,7 @@ type ItemCardProps = {
 };
 
 export function ItemCard({item, currency, onPress, showActions, onDelete}: ItemCardProps) {
+  const {t} = useTranslation('components');
   const percent = getProgressPercent(item.total_funded, item.price);
   const isFullyFunded = item.status === 'FULLY_FUNDED';
 
@@ -41,7 +43,7 @@ export function ItemCard({item, currency, onPress, showActions, onDelete}: ItemC
         )}
         {isFullyFunded && (
           <View style={styles.fundedBadge}>
-            <Text style={styles.fundedBadgeText}>Financé !</Text>
+            <Text style={styles.fundedBadgeText}>{t('itemCard.funded')}</Text>
           </View>
         )}
       </View>
@@ -58,7 +60,9 @@ export function ItemCard({item, currency, onPress, showActions, onDelete}: ItemC
         <View style={styles.stats}>
           <Text style={styles.statText}>{percent}%</Text>
           <Text style={styles.statText}>
-            {item.contributor_count} contributeur{item.contributor_count !== 1 ? 's' : ''}
+            {item.contributor_count === 1
+              ? t('itemCard.contributor', {count: 1})
+              : t('itemCard.contributor_plural', {count: item.contributor_count})}
           </Text>
         </View>
 
@@ -66,13 +70,13 @@ export function ItemCard({item, currency, onPress, showActions, onDelete}: ItemC
           <TouchableOpacity
             onPress={() => Linking.openURL(item.link!)}
             style={styles.linkButton}>
-            <Text style={styles.linkText}>Voir le produit</Text>
+            <Text style={styles.linkText}>{t('itemCard.viewProduct')}</Text>
           </TouchableOpacity>
         )}
 
         {showActions && onDelete && (
           <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-            <Text style={styles.deleteText}>Supprimer</Text>
+            <Text style={styles.deleteText}>{t('itemCard.delete')}</Text>
           </TouchableOpacity>
         )}
       </View>

@@ -1,0 +1,9 @@
+{
+  "itemCard": {
+    "funded": "Собрано!",
+    "contributor": "{{count}} вкладчик",
+    "contributor_plural": "{{count}} вкладчиков",
+    "viewProduct": "Посмотреть товар",
+    "delete": "Удалить"
+  }
+}

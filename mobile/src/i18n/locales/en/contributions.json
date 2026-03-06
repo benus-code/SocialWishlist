@@ -1,0 +1,6 @@
+{
+  "title": "My contributions ({{count}})",
+  "total": "Total: {{amount}}",
+  "emptyTitle": "No contributions",
+  "emptyDescription": "You haven't contributed to a gift yet. Browse your friends' lists!"
+}

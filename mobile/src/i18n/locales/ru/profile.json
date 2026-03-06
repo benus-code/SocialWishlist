@@ -1,0 +1,12 @@
+{
+  "displayName": "Отображаемое имя",
+  "namePlaceholder": "Ваше имя",
+  "email": "Email",
+  "memberSince": "Участник с",
+  "save": "Сохранить",
+  "logout": "Выйти",
+  "logoutTitle": "Выход",
+  "logoutMessage": "Вы хотите выйти?",
+  "connectedVia": "Подключено через {{provider}}",
+  "profileUpdated": "Профиль обновлён!"
+}

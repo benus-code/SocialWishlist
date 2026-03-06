@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {useTranslation} from 'react-i18next';
 import {authApi} from '../../api/auth';
 import {Input} from '../../components/Input';
 import {Button} from '../../components/Button';
@@ -19,6 +20,7 @@ import type {AuthStackParamList} from '../../navigation/AuthStack';
 type Props = NativeStackScreenProps<AuthStackParamList, 'ResetPassword'>;
 
 export function ResetPasswordScreen({navigation, route}: Props) {
+  const {t} = useTranslation('auth');
   const token = route.params?.token;
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -27,15 +29,15 @@ export function ResetPasswordScreen({navigation, route}: Props) {
 
   const handleReset = async () => {
     if (!password || !confirmPassword) {
-      setToast({visible: true, message: 'Veuillez remplir tous les champs', type: 'error'});
+      setToast({visible: true, message: t('resetPassword.fillAllFields'), type: 'error'});
       return;
     }
     if (password.length < 6) {
-      setToast({visible: true, message: 'Le mot de passe doit contenir au moins 6 caractères', type: 'error'});
+      setToast({visible: true, message: t('resetPassword.passwordMinLength'), type: 'error'});
       return;
     }
     if (password !== confirmPassword) {
-      setToast({visible: true, message: 'Les mots de passe ne correspondent pas', type: 'error'});
+      setToast({visible: true, message: t('resetPassword.passwordsMismatch'), type: 'error'});
       return;
     }
 
@@ -43,14 +45,14 @@ export function ResetPasswordScreen({navigation, route}: Props) {
     try {
       await authApi.resetPassword(token, password);
       Alert.alert(
-        'Mot de passe modifié',
-        'Votre mot de passe a été réinitialisé avec succès.',
-        [{text: 'Se connecter', onPress: () => navigation.navigate('Login')}],
+        t('resetPassword.passwordChanged'),
+        t('resetPassword.passwordResetSuccess'),
+        [{text: t('resetPassword.signIn'), onPress: () => navigation.navigate('Login')}],
       );
     } catch (err: any) {
       setToast({
         visible: true,
-        message: err.message || 'Le lien est invalide ou expiré',
+        message: err.message || t('resetPassword.linkInvalidOrExpired'),
         type: 'error',
       });
     } finally {
@@ -61,9 +63,9 @@ export function ResetPasswordScreen({navigation, route}: Props) {
   if (!token) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Lien invalide</Text>
+        <Text style={styles.errorText}>{t('resetPassword.invalidLink')}</Text>
         <Button
-          title="Retour à la connexion"
+          title={t('resetPassword.backToLogin')}
           onPress={() => navigation.navigate('Login')}
         />
       </View>
@@ -81,16 +83,16 @@ export function ResetPasswordScreen({navigation, route}: Props) {
           <View style={styles.iconCircle}>
             <Text style={styles.icon}>🔒</Text>
           </View>
-          <Text style={styles.title}>Nouveau mot de passe</Text>
+          <Text style={styles.title}>{t('resetPassword.title')}</Text>
           <Text style={styles.subtitle}>
-            Choisissez un nouveau mot de passe pour votre compte.
+            {t('resetPassword.subtitle')}
           </Text>
         </View>
 
         <View style={styles.form}>
           <Input
-            label="Nouveau mot de passe"
-            placeholder="Minimum 6 caractères"
+            label={t('resetPassword.newPassword')}
+            placeholder={t('resetPassword.newPasswordPlaceholder')}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -98,8 +100,8 @@ export function ResetPasswordScreen({navigation, route}: Props) {
           />
 
           <Input
-            label="Confirmer le mot de passe"
-            placeholder="Retapez votre mot de passe"
+            label={t('resetPassword.confirmPassword')}
+            placeholder={t('resetPassword.confirmPlaceholder')}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
@@ -107,7 +109,7 @@ export function ResetPasswordScreen({navigation, route}: Props) {
           />
 
           <Button
-            title="Réinitialiser"
+            title={t('resetPassword.reset')}
             onPress={handleReset}
             loading={loading}
             size="lg"

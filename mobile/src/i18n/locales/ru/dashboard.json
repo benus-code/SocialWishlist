@@ -1,0 +1,33 @@
+{
+  "title": "Мои списки ({{count}})",
+  "newList": "+ Новый список",
+  "emptyTitle": "Пока нет списков",
+  "emptyDescription": "Создайте свой первый список желаний и поделитесь с близкими.",
+  "emptyAction": "Создать первый список",
+  "modal": {
+    "cancel": "Отмена",
+    "title": "Новый список",
+    "titleLabel": "Название",
+    "titlePlaceholder": "Напр.: Мой день рождения 2026",
+    "occasion": "Повод",
+    "currency": "Валюта",
+    "eventDate": "Дата события",
+    "chooseDateOptional": "Выбрать дату (необязательно)",
+    "createList": "Создать список"
+  },
+  "occasions": {
+    "birthday": "День рождения",
+    "christmas": "Новый год",
+    "wedding": "Свадьба",
+    "housewarming": "Новоселье",
+    "babyShower": "Baby Shower",
+    "graduation": "Выпускной",
+    "other": "Другое"
+  },
+  "deleteTitle": "Удалить список",
+  "deleteMessage": "Вы действительно хотите удалить «{{title}}»? Это действие необратимо.",
+  "titleRequired": "Название обязательно",
+  "listCreated": "Список создан!",
+  "listDeleted": "Список удалён",
+  "deleteError": "Ошибка при удалении"
+}

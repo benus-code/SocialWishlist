@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {useTranslation} from 'react-i18next';
 import {useAuth} from '../../contexts/AuthContext';
 import {Input} from '../../components/Input';
 import {Button} from '../../components/Button';
@@ -19,6 +20,7 @@ import type {AuthStackParamList} from '../../navigation/AuthStack';
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export function RegisterScreen({navigation}: Props) {
+  const {t} = useTranslation('auth');
   const {register} = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -29,11 +31,11 @@ export function RegisterScreen({navigation}: Props) {
 
   const handleRegister = async () => {
     if (!email.trim() || !password) {
-      setToast({visible: true, message: 'Email et mot de passe requis', type: 'error'});
+      setToast({visible: true, message: t('register.emailPasswordRequired'), type: 'error'});
       return;
     }
     if (password.length < 6) {
-      setToast({visible: true, message: 'Le mot de passe doit contenir au moins 6 caractères', type: 'error'});
+      setToast({visible: true, message: t('register.passwordMinLength'), type: 'error'});
       return;
     }
 
@@ -43,7 +45,7 @@ export function RegisterScreen({navigation}: Props) {
     } catch (err: any) {
       setToast({
         visible: true,
-        message: err.message || 'Erreur lors de la création du compte',
+        message: err.message || t('register.createError'),
         type: 'error',
       });
     } finally {
@@ -62,14 +64,14 @@ export function RegisterScreen({navigation}: Props) {
           <View style={styles.logo}>
             <Text style={styles.logoText}>W</Text>
           </View>
-          <Text style={styles.title}>Créer un compte</Text>
-          <Text style={styles.subtitle}>Rejoignez Wishly gratuitement</Text>
+          <Text style={styles.title}>{t('register.title')}</Text>
+          <Text style={styles.subtitle}>{t('register.subtitle')}</Text>
         </View>
 
         <View style={styles.form}>
           <Input
-            label="Nom (optionnel)"
-            placeholder="Votre nom"
+            label={t('register.name')}
+            placeholder={t('register.namePlaceholder')}
             value={displayName}
             onChangeText={setDisplayName}
             autoCapitalize="words"
@@ -77,8 +79,8 @@ export function RegisterScreen({navigation}: Props) {
           />
 
           <Input
-            label="Email"
-            placeholder="votre@email.com"
+            label={t('register.email')}
+            placeholder={t('register.emailPlaceholder')}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -88,8 +90,8 @@ export function RegisterScreen({navigation}: Props) {
           />
 
           <Input
-            label="Mot de passe"
-            placeholder="Minimum 6 caractères"
+            label={t('register.password')}
+            placeholder={t('register.passwordPlaceholder')}
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
@@ -102,7 +104,7 @@ export function RegisterScreen({navigation}: Props) {
           />
 
           <Button
-            title="Créer mon compte"
+            title={t('register.createAccount')}
             onPress={handleRegister}
             loading={loading}
             size="lg"
@@ -111,9 +113,9 @@ export function RegisterScreen({navigation}: Props) {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Déjà un compte ?</Text>
+          <Text style={styles.footerText}>{t('register.hasAccount')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.footerLink}> Se connecter</Text>
+            <Text style={styles.footerLink}>{t('register.signIn')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -122,7 +124,7 @@ export function RegisterScreen({navigation}: Props) {
         message={toast.message}
         type={toast.type}
         visible={toast.visible}
-        onDismiss={() => setToast(t => ({...t, visible: false}))}
+        onDismiss={() => setToast(prev => ({...prev, visible: false}))}
       />
     </KeyboardAvoidingView>
   );

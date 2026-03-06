@@ -7,6 +7,7 @@ import {
   Alert,
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useTranslation} from 'react-i18next';
 import {useAuth} from '../contexts/AuthContext';
 import {authApi} from '../api/auth';
 import {Input} from '../components/Input';
@@ -16,6 +17,8 @@ import {colors, fonts, spacing, radius, shadows} from '../theme';
 import {formatDate} from '../utils/format';
 
 export function ProfileScreen() {
+  const {t} = useTranslation('profile');
+  const {t: tCommon} = useTranslation('common');
   const insets = useSafeAreaInsets();
   const {user, logout, refreshUser} = useAuth();
   const [displayName, setDisplayName] = useState(user?.display_name || '');
@@ -27,9 +30,9 @@ export function ProfileScreen() {
     try {
       await authApi.updateMe({display_name: displayName.trim()});
       await refreshUser();
-      setToast({visible: true, message: 'Profil mis à jour !', type: 'success'});
+      setToast({visible: true, message: t('profileUpdated'), type: 'success'});
     } catch (err: any) {
-      setToast({visible: true, message: err.message || 'Erreur', type: 'error'});
+      setToast({visible: true, message: err.message || tCommon('error'), type: 'error'});
     } finally {
       setSaving(false);
     }
@@ -37,11 +40,11 @@ export function ProfileScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      'Déconnexion',
-      'Voulez-vous vous déconnecter ?',
+      t('logoutTitle'),
+      t('logoutMessage'),
       [
-        {text: 'Annuler', style: 'cancel'},
-        {text: 'Se déconnecter', style: 'destructive', onPress: logout},
+        {text: tCommon('cancel'), style: 'cancel'},
+        {text: t('logout'), style: 'destructive', onPress: logout},
       ],
     );
   };
@@ -65,7 +68,7 @@ export function ProfileScreen() {
         {user.oauth_provider && (
           <View style={styles.oauthBadge}>
             <Text style={styles.oauthText}>
-              Connecté via {user.oauth_provider}
+              {t('connectedVia', {provider: user.oauth_provider})}
             </Text>
           </View>
         )}
@@ -74,25 +77,25 @@ export function ProfileScreen() {
       {/* Info Card */}
       <View style={styles.card}>
         <Input
-          label="Nom d'affichage"
-          placeholder="Votre nom"
+          label={t('displayName')}
+          placeholder={t('namePlaceholder')}
           value={displayName}
           onChangeText={setDisplayName}
           autoCapitalize="words"
         />
 
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Email</Text>
+          <Text style={styles.infoLabel}>{t('email')}</Text>
           <Text style={styles.infoValue}>{user.email}</Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Membre depuis</Text>
+          <Text style={styles.infoLabel}>{t('memberSince')}</Text>
           <Text style={styles.infoValue}>{formatDate(user.created_at)}</Text>
         </View>
 
         <Button
-          title="Enregistrer"
+          title={t('save')}
           onPress={handleSave}
           loading={saving}
           disabled={displayName.trim() === (user.display_name || '')}
@@ -102,7 +105,7 @@ export function ProfileScreen() {
 
       {/* Logout */}
       <Button
-        title="Se déconnecter"
+        title={t('logout')}
         onPress={handleLogout}
         variant="danger"
         style={styles.logoutButton}
@@ -112,7 +115,7 @@ export function ProfileScreen() {
         message={toast.message}
         type={toast.type}
         visible={toast.visible}
-        onDismiss={() => setToast(t => ({...t, visible: false}))}
+        onDismiss={() => setToast(prev => ({...prev, visible: false}))}
       />
     </ScrollView>
   );

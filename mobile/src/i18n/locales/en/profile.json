@@ -1,0 +1,12 @@
+{
+  "displayName": "Display name",
+  "namePlaceholder": "Your name",
+  "email": "Email",
+  "memberSince": "Member since",
+  "save": "Save",
+  "logout": "Log out",
+  "logoutTitle": "Log out",
+  "logoutMessage": "Do you want to log out?",
+  "connectedVia": "Connected via {{provider}}",
+  "profileUpdated": "Profile updated!"
+}
