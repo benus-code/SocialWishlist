@@ -1,4 +1,5 @@
 {
   "name": "WishlyApp",
-  "displayName": "Wishly"
+  "displayName": "Wishly",
+  "icon": "./assets/icon/icon.svg"
 }
