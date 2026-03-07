@@ -63,21 +63,33 @@ export function PublicWishlistScreen({route, navigation}: Props) {
     );
   });
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     try {
       const wl = await wishlistsApi.getPublic(slug);
       setWishlist(wl);
       setItems(wl.items || []);
     } catch {
-      setToast({visible: true, message: t('listNotFound'), type: 'error'});
+      if (!silent) {
+        setToast({visible: true, message: t('listNotFound'), type: 'error'});
+      }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (!silent) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, [slug, t]);
 
   useEffect(() => {
     loadData();
+  }, [loadData]);
+
+  // Poll every 3 seconds as fallback when WebSocket is disconnected
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData(true);
+    }, 3000);
+    return () => clearInterval(interval);
   }, [loadData]);
 
   const loadMyContribution = async (itemId: string) => {

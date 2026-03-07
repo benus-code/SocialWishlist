@@ -11,7 +11,7 @@ const RootStack = createNativeStackNavigator();
 
 // Deep linking configuration
 const linking: LinkingOptions<any> = {
-  prefixes: ['wishly://', 'https://wishly.app'],
+  prefixes: ['wishly://', 'https://socialwishlist-frontend.onrender.com'],
   config: {
     screens: {
       PublicWishlistDeepLink: 'list/:slug',

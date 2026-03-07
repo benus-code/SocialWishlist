@@ -65,7 +65,7 @@ export function WishlistEditorScreen({route, navigation}: Props) {
     );
   });
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     try {
       const [wl, itms] = await Promise.all([
         wishlistsApi.get(wishlistId),
@@ -74,15 +74,27 @@ export function WishlistEditorScreen({route, navigation}: Props) {
       setWishlist(wl);
       setItems(itms);
     } catch {
-      setToast({visible: true, message: tCommon('loadingError'), type: 'error'});
+      if (!silent) {
+        setToast({visible: true, message: tCommon('loadingError'), type: 'error'});
+      }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (!silent) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, [wishlistId, tCommon]);
 
   useEffect(() => {
     loadData();
+  }, [loadData]);
+
+  // Poll every 3 seconds as fallback when WebSocket is disconnected
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData(true);
+    }, 3000);
+    return () => clearInterval(interval);
   }, [loadData]);
 
   const handleScrape = async () => {
@@ -155,7 +167,7 @@ export function WishlistEditorScreen({route, navigation}: Props) {
 
   const handleShare = async () => {
     if (!wishlist) return;
-    const shareUrl = `https://wishly.app/list/${wishlist.slug}`;
+    const shareUrl = `https://socialwishlist-frontend.onrender.com/list/${wishlist.slug}`;
     try {
       await Share.share({
         message: t('shareMessage', {title: wishlist.title, url: shareUrl}),
