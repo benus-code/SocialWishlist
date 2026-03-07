@@ -27,21 +27,22 @@ export function GoogleSignInButton({onSuccess, onError}: GoogleSignInButtonProps
 
   useEffect(() => {
     authApi.getGoogleClientId().then(res => {
-      if (res?.client_id) {
-        try {
-          const config: Parameters<typeof GoogleSignin.configure>[0] = {
-            webClientId: res.client_id,
-            offlineAccess: false,
-          };
-          if (Platform.OS === 'ios' && res.ios_client_id) {
-            config.iosClientId = res.ios_client_id;
-          }
-          GoogleSignin.configure(config);
-          setConfigured(true);
-        } catch {
-          // Configuration failed (e.g. missing iOS client ID)
-        }
+      if (!res?.client_id) return;
+
+      // On iOS, GoogleSignin.configure() crashes natively if no
+      // iosClientId is provided and no GoogleService-Info.plist exists.
+      // Skip configuration entirely on iOS when ios_client_id is missing.
+      if (Platform.OS === 'ios' && !res.ios_client_id) return;
+
+      const config: Parameters<typeof GoogleSignin.configure>[0] = {
+        webClientId: res.client_id,
+        offlineAccess: false,
+      };
+      if (Platform.OS === 'ios') {
+        config.iosClientId = res.ios_client_id;
       }
+      GoogleSignin.configure(config);
+      setConfigured(true);
     }).catch(() => {
       // Google sign-in not available
     });
