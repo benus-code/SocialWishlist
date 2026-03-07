@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import {
   GoogleSignin,
@@ -27,11 +28,19 @@ export function GoogleSignInButton({onSuccess, onError}: GoogleSignInButtonProps
   useEffect(() => {
     authApi.getGoogleClientId().then(res => {
       if (res?.client_id) {
-        GoogleSignin.configure({
-          webClientId: res.client_id,
-          offlineAccess: false,
-        });
-        setConfigured(true);
+        try {
+          const config: Parameters<typeof GoogleSignin.configure>[0] = {
+            webClientId: res.client_id,
+            offlineAccess: false,
+          };
+          if (Platform.OS === 'ios' && res.ios_client_id) {
+            config.iosClientId = res.ios_client_id;
+          }
+          GoogleSignin.configure(config);
+          setConfigured(true);
+        } catch {
+          // Configuration failed (e.g. missing iOS client ID)
+        }
       }
     }).catch(() => {
       // Google sign-in not available

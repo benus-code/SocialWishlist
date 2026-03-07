@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_IOS_CLIENT_ID: str = ""
 
     # Minimum contribution in cents (default 100 = 1 EUR)
     MIN_CONTRIBUTION_CENTS: int = 100

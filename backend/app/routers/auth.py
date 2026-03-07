@@ -121,7 +121,10 @@ async def google_auth(data: GoogleAuthRequest, response: Response, db: AsyncSess
 async def google_client_id():
     if not settings.GOOGLE_CLIENT_ID:
         raise HTTPException(status_code=404, detail="Google OAuth not configured")
-    return {"client_id": settings.GOOGLE_CLIENT_ID}
+    result = {"client_id": settings.GOOGLE_CLIENT_ID}
+    if settings.GOOGLE_IOS_CLIENT_ID:
+        result["ios_client_id"] = settings.GOOGLE_IOS_CLIENT_ID
+    return result
 
 
 @router.post("/logout")

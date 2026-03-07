@@ -33,7 +33,7 @@ export const authApi = {
   },
 
   getGoogleClientId() {
-    return api.get<{client_id: string}>('/api/auth/google/client-id', false);
+    return api.get<{client_id: string; ios_client_id?: string}>('/api/auth/google/client-id', false);
   },
 
   logout() {
