@@ -1,0 +1,32 @@
+{
+  "skip": "Skip",
+  "back": "Back",
+  "next": "Next",
+  "getStarted": "Get Started!",
+  "steps": {
+    "0": {
+      "title": "Welcome to Wishly!",
+      "description": "Let us show you around so you can make the most of your wishlists. This will only take a moment."
+    },
+    "1": {
+      "title": "Create your wishlists",
+      "description": "Tap \"+ New list\" to create a list for any occasion: birthday, wedding, Christmas... Add a title, an occasion, and an optional date."
+    },
+    "2": {
+      "title": "Add items to your list",
+      "description": "Inside each wishlist, add items you want. Paste a product URL and the name, image, and price are auto-filled!"
+    },
+    "3": {
+      "title": "Share with friends",
+      "description": "Each wishlist has a unique shareable link. Send it via WhatsApp, Telegram, email, or just copy the link. Your friends don't need an account to view it!"
+    },
+    "4": {
+      "title": "Track contributions",
+      "description": "Go to \"Contributions\" in the bottom menu to see all the gifts you've helped fund. Contributions are always anonymous to the wishlist creator!"
+    },
+    "5": {
+      "title": "You're all set!",
+      "description": "You now know the basics. Start by creating your first wishlist and sharing it with the people you love. Happy gifting!"
+    }
+  }
+}

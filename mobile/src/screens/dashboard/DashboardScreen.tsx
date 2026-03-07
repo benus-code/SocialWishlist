@@ -20,6 +20,7 @@ import {Button} from '../../components/Button';
 import {Input} from '../../components/Input';
 import {EmptyState} from '../../components/EmptyState';
 import {Toast} from '../../components/Toast';
+import {OnboardingTour} from '../../components/OnboardingTour';
 import {colors, fonts, spacing, radius, shadows} from '../../theme';
 import {formatDate} from '../../utils/format';
 
@@ -286,6 +287,8 @@ export function DashboardScreen({navigation}: Props) {
           </View>
         </View>
       </Modal>
+
+      <OnboardingTour />
 
       <Toast
         message={toast.message}

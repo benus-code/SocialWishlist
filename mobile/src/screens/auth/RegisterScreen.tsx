@@ -13,6 +13,7 @@ import {useTranslation} from 'react-i18next';
 import {useAuth} from '../../contexts/AuthContext';
 import {Input} from '../../components/Input';
 import {Button} from '../../components/Button';
+import {GoogleSignInButton} from '../../components/GoogleSignInButton';
 import {Toast} from '../../components/Toast';
 import {colors, fonts, spacing, radius} from '../../theme';
 import type {AuthStackParamList} from '../../navigation/AuthStack';
@@ -21,7 +22,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
 export function RegisterScreen({navigation}: Props) {
   const {t} = useTranslation('auth');
-  const {register} = useAuth();
+  const {register, googleLogin} = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -109,6 +110,21 @@ export function RegisterScreen({navigation}: Props) {
             loading={loading}
             size="lg"
             style={styles.registerButton}
+          />
+
+          <GoogleSignInButton
+            onSuccess={async (credential) => {
+              try {
+                await googleLogin(credential);
+              } catch (err: any) {
+                setToast({
+                  visible: true,
+                  message: err.message || t('register.createError'),
+                  type: 'error',
+                });
+              }
+            }}
+            onError={(msg) => setToast({visible: true, message: msg, type: 'error'})}
           />
         </View>
 

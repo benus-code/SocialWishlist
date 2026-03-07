@@ -13,6 +13,7 @@ import {useTranslation} from 'react-i18next';
 import {useAuth} from '../../contexts/AuthContext';
 import {Input} from '../../components/Input';
 import {Button} from '../../components/Button';
+import {GoogleSignInButton} from '../../components/GoogleSignInButton';
 import {Toast} from '../../components/Toast';
 import {colors, fonts, spacing, radius} from '../../theme';
 import type {AuthStackParamList} from '../../navigation/AuthStack';
@@ -21,7 +22,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 export function LoginScreen({navigation}: Props) {
   const {t} = useTranslation('auth');
-  const {login} = useAuth();
+  const {login, googleLogin} = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -101,6 +102,21 @@ export function LoginScreen({navigation}: Props) {
             loading={loading}
             size="lg"
             style={styles.loginButton}
+          />
+
+          <GoogleSignInButton
+            onSuccess={async (credential) => {
+              try {
+                await googleLogin(credential);
+              } catch (err: any) {
+                setToast({
+                  visible: true,
+                  message: err.message || t('login.invalidCredentials'),
+                  type: 'error',
+                });
+              }
+            }}
+            onError={(msg) => setToast({visible: true, message: msg, type: 'error'})}
           />
         </View>
 

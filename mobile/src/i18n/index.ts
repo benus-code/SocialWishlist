@@ -11,6 +11,7 @@ import enProfile from './locales/en/profile.json';
 import enPublicWishlist from './locales/en/publicWishlist.json';
 import enComponents from './locales/en/components.json';
 import enNavigation from './locales/en/navigation.json';
+import enOnboarding from './locales/en/onboarding.json';
 
 import ruCommon from './locales/ru/common.json';
 import ruAuth from './locales/ru/auth.json';
@@ -21,6 +22,7 @@ import ruProfile from './locales/ru/profile.json';
 import ruPublicWishlist from './locales/ru/publicWishlist.json';
 import ruComponents from './locales/ru/components.json';
 import ruNavigation from './locales/ru/navigation.json';
+import ruOnboarding from './locales/ru/onboarding.json';
 
 const ns = [
   'common',
@@ -32,6 +34,7 @@ const ns = [
   'publicWishlist',
   'components',
   'navigation',
+  'onboarding',
 ] as const;
 
 i18n.use(initReactI18next).init({
@@ -50,6 +53,7 @@ i18n.use(initReactI18next).init({
       publicWishlist: enPublicWishlist,
       components: enComponents,
       navigation: enNavigation,
+      onboarding: enOnboarding,
     },
     ru: {
       common: ruCommon,
@@ -61,6 +65,7 @@ i18n.use(initReactI18next).init({
       publicWishlist: ruPublicWishlist,
       components: ruComponents,
       navigation: ruNavigation,
+      onboarding: ruOnboarding,
     },
   },
   interpolation: {
