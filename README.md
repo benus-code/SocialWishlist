@@ -2,7 +2,6 @@
 
 **SocialWishlist** is a mobile-first social gifting platform that keeps the surprise alive — a wishlist owner can track funding progress in real time **without ever seeing who contributed**.
 
-Built as a **Senior Fullstack technical test** with production-minded choices: async backend, real-time events, database migrations, strict privacy boundaries, and a UX designed for phones first.
 
 ---
 
@@ -179,4 +178,4 @@ docker-compose up --build
 
 ## 👤 Author
 
-**mBONG joseph lustigier** — Master 2 Student & Junior IT Professional.
+**benus-code** — Master 2 Student & Junior IT Professional.
