@@ -1,57 +1,73 @@
-# SocialWishlist - Plan d'implémentation
+CURRENT STATUS - DONE ✅
+Phase 1 - Technical Blockers ✅
+[x] Google OAuth (backend + frontend Google Sign-In)
 
-> Test technique pour Robert. Objectif : produit fini, pas un prototype.
+[x] URL Autofill (OG tags scraping, JSON-LD, meta)
 
----
+[x] Full Docker Compose (PostgreSQL + Backend + Frontend)
 
-## ÉTAT ACTUEL - Ce qui est FAIT
+[x] Real-time WebSockets + polling fallback
 
-### Phase 1 - Bloquants techniques ✅
-- [x] OAuth Google (backend + frontend Google Sign-In)
-- [x] Autofill par URL (scraping OG tags, JSON-LD, meta)
-- [x] Docker Compose complet (PostgreSQL + Backend + Frontend)
-- [x] WebSocket temps réel + polling fallback
+Phase 2 - Design & Polish ✅
+[x] Custom violet/purple palette (no default indigo)
 
-### Phase 2 - Design & Polish ✅
-- [x] Palette custom violet/purple (pas indigo par défaut)
-- [x] Empty states avec SVG + CTA
-- [x] Skeleton loading (shimmer animation)
-- [x] Modales custom (plus de alert/confirm natifs)
-- [x] Toast notifications (success/error/info, auto-dismiss)
-- [x] Partage social (WhatsApp, Telegram, Email, copier lien)
-- [x] Pages 404/erreur stylées
-- [x] Favicon SVG + meta OG tags
-- [x] Animations CSS (fadeIn, slideUp, scaleIn)
-- [x] Mobile responsive (Tailwind breakpoints)
+[x] Empty states with SVGs + CTAs
 
-### Phase 3 - Cas limites ✅
-- [x] Suppression item avec avertissement contributions
-- [x] Contribution minimum 1 EUR
-- [x] **3.5** Masquer bouton Contribute sur item fully funded + badge "Fully funded!"
-- [x] **3.1** UI archiver/désarchiver wishlist (bouton, badge, grisé, backend check)
-- [x] **3.2** UI modifier/retirer sa contribution (edit, withdraw, affichage "Your contribution")
-- [x] **3.3** Auto-détection wishlists expirées (event_date passée → message, contributions bloquées)
-- [x] **3.4** Feedback lien cassé lors du scraping (toast info si URL inaccessible)
+[x] Skeleton loading (shimmer animations)
 
-### Phase 4 - Alembic ✅
-- [x] **4.1** Alembic configuré (async, migration initiale, auto-migrate au démarrage)
+[x] Custom modals (no more native alert/confirm)
 
-### Phase 5 - Polish final ✅
-- [x] **5.1** Landing page améliorée (mockup app, occasions, 4 features, privacy section, CTA)
-- [x] **5.2** Onboarding (welcome toast + auto-open create modal après inscription)
-- [x] **5.3** Page profil (/profile, avatar, edit display_name, PUT /api/auth/me)
-- [x] **5.4** Page Mes contributions (/contributions, GET /api/auth/me/contributions, historique)
+[x] Toast notifications (success/error/info, auto-dismiss)
 
----
+[x] Social sharing (WhatsApp, Telegram, Email, copy link)
 
-## CE QUI RESTE À FAIRE
+[x] Styled 404/error pages
 
-### Phase 4.2 - Déploiement 🚀
-> Robert va visiter le site, s'inscrire et explorer
+[x] SVG Favicon + OG meta tags
 
-- [ ] **4.2** Déploiement en production
-  - Frontend : Vercel (ou autre)
-  - Backend : Railway / Render
-  - Base de données : PostgreSQL managé
-  - Variables d'environnement configurées
-  - HTTPS + domaine fonctionnel
+[x] CSS animations (fadeIn, slideUp, scaleIn)
+
+[x] Mobile responsive (Tailwind breakpoints)
+
+Phase 3 - Edge Cases ✅
+[x] Item deletion with contribution warnings
+
+[x] Minimum contribution: 1 EUR
+
+[x] 3.5 Hide "Contribute" button on fully funded items + "Fully funded!" badge
+
+[x] 3.1 Archive/unarchive wishlist UI (button, badge, grayed out, backend check)
+
+[x] 3.2 Edit/withdraw contribution UI (edit, withdraw, "Your contribution" display)
+
+[x] 3.3 Auto-detection of expired wishlists (past event_date → message, contributions blocked)
+
+[x] 3.4 Broken link feedback during scraping (info toast if URL is unreachable)
+
+Phase 4 - Alembic ✅
+[x] 4.1 Alembic configured (async, initial migration, auto-migrate on startup)
+
+Phase 5 - Final Polish ✅
+[x] 5.1 Enhanced landing page (app mockup, occasions, 4 key features, privacy section, CTA)
+
+[x] 5.2 Onboarding (welcome toast + auto-open "create modal" after sign-up)
+
+[x] 5.3 Profile page (/profile, avatar, display_name edit, PUT /api/auth/me)
+
+[x] 5.4 "My Contributions" page (/contributions, GET /api/auth/me/contributions, history)
+
+TO-DO LIST 🚀
+Phase 4.2 - Deployment
+Robert will visit the site, sign up, and explore
+
+[ ] 4.2 Production Deployment
+
+Frontend: Vercel (or equivalent)
+
+Backend: Railway / Render
+
+Database: Managed PostgreSQL
+
+Environment variables configured
+
+HTTPS + functional domain
