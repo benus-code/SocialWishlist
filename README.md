@@ -1,91 +1,182 @@
 🎁 SocialWishlist
-The social gifting platform that keeps the surprise alive.
 
-Developed as a technical test for Robert. This is a production-ready application focusing on real-time interactions, clean UX, and strict privacy logic.
+**SocialWishlist** is a mobile-first social gifting platform that keeps the surprise alive — a wishlist owner can track funding progress in real time **without ever seeing who contributed**.
 
-🌟 Vision & Logic
-SocialWishlist solves the "duplicate gift" problem while ensuring the creator never knows who bought what.
+Built as a **Senior Fullstack technical test** with production-minded choices: async backend, real-time events, database migrations, strict privacy boundaries, and a UX designed for phones first.
 
-The "Blind-Surprise" Protocol: The wishlist owner can see the progress of their items but never the identity of the contributors or individual amounts (unless explicitly revealed).
+---
 
-Real-Time Synergy: Every reservation or contribution is broadcasted instantly to all users via WebSockets—no refreshing needed.
+## ✨ Product highlights
 
-Frictionless Sharing: Friends can contribute or reserve items via a public link without needing an account.
+- ⚡ **Real-time updates (FastAPI + Socket.IO + React)**  
+  Contributions/reservations instantly update every connected client (room-based broadcasting per wishlist).
+- 🕶️ **“Blind‑Surprise” privacy model**  
+  The wishlist owner sees item status and progress, but **never** contributor identities or per-user amounts.
+- 📱 **Mobile-first, responsive UI**  
+  Touch-friendly controls, modern transitions (fade/slide/scale), and a custom **Purple/Violet** palette.
+- 🔗 **Smart item add via scraping**  
+  Paste a product URL → metadata extraction via **OpenGraph + JSON‑LD** (with fallbacks for real-world sites).
+- 💜 **Group funding + progress bars**  
+  Partial funding, fully funded states, and reservation flows with clean edge-case handling.
+- 🔐 **Google OAuth 2.0 + JWT sessions**  
+  Google Sign-In via token verification, plus JWT session cookie for API authentication.
 
-🛠️ Technical Stack
-Frontend: Next.js 14 (App Router), Tailwind CSS, Lucide Icons, Shadcn/UI.
+---
 
-Backend: FastAPI (Python), PostgreSQL, SQLAlchemy (Async), Alembic.
+## 🧱 Architecture overview
 
-Real-Time: Native WebSockets with broadcast logic.
+### Backend (FastAPI)
 
-Auth: Google OAuth & JWT-based session management.
+- **Async-first**: FastAPI + SQLAlchemy Async + asyncpg.
+- **Migrations**: Alembic runs on startup (`upgrade head`) with a safe fallback to `create_all` for local bootstrapping.
+- **Real-time**: Socket.IO ASGI server + wishlist rooms (e.g. `wishlist_<id>`) and `item_updated` events.
+- **Privacy boundaries (Blind‑Surprise)**:
+  - Public wishlist endpoint returns **wishlist + items + aggregated funding** (total + contributor_count), not identities.
+  - Contribution endpoints are **per authenticated user** (`/mine`) and updates broadcast only aggregated totals.
+- **Scraping service**: `/api/scrape` fetches HTML and extracts title/image/price using OG tags + JSON‑LD + pragmatic fallbacks.
 
-DevOps: Docker Compose, GitHub Actions.
+### Frontend (Next.js)
 
-✅ Implementation Status
-Phase 1 - Core & Tech
-[x] Auth: Full Google Sign-In integration.
+- **Next.js App Router** with TypeScript + React.
+- **Socket.IO client** with a reliability-first strategy:
+  - `transports: ["polling", "websocket"]` to survive restrictive hosting, then upgrade.
+  - automatic room rejoin on reconnect for consistent real-time UX.
+- **UI system**: Tailwind CSS v4 theme tokens + reusable components (cards, modals, toasts, skeletons, progress bars).
 
-[x] Smart Add: Automatic item metadata scraping (OpenGraph, JSON-LD) via URL.
+---
 
-[x] Infrastructure: Complete Dockerization for easy local setup.
+## 🧰 Tech stack
 
-[x] Real-Time: WebSocket implementation with a polling fallback for stability.
+### Frontend
 
-Phase 2 - UX & Design (Custom UI)
-[x] Branding: Custom "Vibe" palette (Deep Violet/Purple).
+- **Next.js** (App Router)
+- **React** + **TypeScript**
+- **Tailwind CSS v4** (custom theme tokens + motion utilities)
+- **Socket.IO client** for real-time events
 
-[x] Feedback: Toast notifications for all actions and Skeleton loaders for data fetching.
+### Backend
 
-[x] Social: Built-in sharing tools for WhatsApp, Telegram, and Email.
+- **FastAPI** (Python)
+- **PostgreSQL** (Docker image: `postgres:16-alpine`)
+- **SQLAlchemy 2 (Async)** + **asyncpg**
+- **Alembic** for schema migrations
+- **python-socketio** (ASGI mode) for real-time broadcasting
+- **httpx** + **BeautifulSoup4** for scraping (OG tags / JSON-LD)
 
-[x] Animations: Smooth transitions (scale, fade, slide) using CSS and Tailwind.
+### DevOps
 
-Phase 3 - Advanced Business Logic
-[x] Crowdfunding: Dynamic progress bars for high-value items.
+- **Docker** + **Docker Compose**
+- Environment-driven configuration (`.env`, `.env.example`)
 
-[x] Edge Case Management: Handling expired wishlists, contribution withdrawals, and item deletion warnings.
+---
 
-[x] Data Integrity: Async migrations managed via Alembic.
+## 📱 Mobile excellence
 
+SocialWishlist is intentionally optimized for mobile usage patterns:
 
-🚀 Getting Started
-Local Development
-Clone the repo:
+- ✅ **Touch targets & ergonomics**: primary actions are large, full-width buttons with comfortable spacing.
+- ✅ **Responsive layout**: components scale from small screens upward with a card-based layout that avoids overflow and tiny hit areas.
+- ✅ **Perceived performance**: skeleton loaders + optimistic UI patterns reduce “blank screen” time.
+- ✅ **Motion & feedback**: subtle fade/slide/scale transitions and toast feedback provide clarity without visual noise.
+- ✅ **Mobile-safe networking**: Socket.IO uses polling fallback and reconnection strategies to handle unstable cellular networks.
 
-Bash
-git clone -b dev https://github.com/yourusername/social-wishlist.git
-cd social-wishlist
+---
 
+## 🚀 Quickstart (Docker Compose)
 
+### Prerequisites
 
-Setup Environment:
-Create a .env file in the root (refer to .env.example).
+- Docker + Docker Compose installed
 
-Run with Docker:
+### 1) Configure environment
 
-Bash
+Create a `.env` file at the repository root (or export env vars in your shell). Minimum recommended:
+
+```bash
+# Database
+POSTGRES_PASSWORD=changeme
+
+# Backend
+JWT_SECRET=change-this-in-production
+CORS_ORIGINS=http://localhost:3000
+
+# Frontend build/runtime (Docker Compose defaults are already OK)
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_WS_URL=http://localhost:8000
+
+# Optional: Google OAuth (recommended for full feature set)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+```
+
+### 2) Start the stack
+
+```bash
 docker-compose up --build
-The app will be available at localhost:3000 (Front) and localhost:8000 (Back)
+```
 
+### 3) Open the app
 
+- **Frontend**: `http://localhost:3000`
+- **Backend health**: `http://localhost:8000/api/health`
 
+---
 
+## 🧪 Core user flows
 
-📂 Project Structure
-Plaintext
-├── frontend/          # Next.js Application
-├── backend/           # FastAPI Application
-│   ├── alembic/       # Database migrations
-│   ├── models/        # SQLAlchemy Schemas
-│   ├── routes/        # API Endpoints
-│   └── main.py        # WebSocket & App Entry point
+- 🎯 **Owner**
+  - Create wishlists, add items (manual or via scraping), share public link, track overall progress.
+  - Sees **funding progress only** — never contributor details.
+- 🤝 **Contributor**
+  - Open public wishlist link, sign in, reserve or contribute to items.
+  - Can view and edit **their own** contribution.
+
+---
+
+## 🗂️ Project structure
+
+```text
+.
+├── backend/
+│   ├── alembic/
+│   │   ├── versions/
+│   │   └── env.py
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── config.py
+│   │   ├── database.py
+│   │   ├── models/
+│   │   ├── routers/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   └── websocket/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── alembic.ini
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   └── lib/
+│   ├── public/
+│   ├── Dockerfile
+│   ├── next.config.ts
+│   └── package.json
 ├── docker-compose.yml
 └── README.md
+```
 
+---
 
+## 🔐 Security & privacy notes
 
+- 🍪 **Session security**: JWT is issued server-side and stored as an **HTTP-only** cookie by default.
+- 🧩 **Principle of least privilege**: owner-only routes require authentication; public routes are intentionally scoped to non-sensitive data.
+- 🕶️ **Blind‑Surprise enforcement**: public wishlist responses only expose aggregated funding, never identities or per-user breakdowns.
 
-👤 Author
-Mbong joseph lustigier (benus-code) Master 2 Student in Software for Automated Systems & Junior IT Professional. Specialized in System Administration, Network Security, and AI-driven automation.
+---
+
+## 👤 Author
+
+**mBONG joseph lustigier** — Master 2 Student & Junior IT Professional.
